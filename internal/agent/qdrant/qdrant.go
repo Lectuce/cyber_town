@@ -29,7 +29,7 @@ func (c *QdrantClient) CreateCollection(ctx context.Context) error {
 	err := c.client.CreateCollection(ctx, &qdrant.CreateCollection{
 		CollectionName: config.QDRANT_COLLECTION_NAME,
 		VectorsConfig: qdrant.NewVectorsConfig(&qdrant.VectorParams{
-			Size:     4,
+			Size:     config.EMBEDDING_DIMEMSION,
 			Distance: qdrant.Distance_Cosine,
 		}),
 	})

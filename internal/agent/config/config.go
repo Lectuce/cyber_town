@@ -35,16 +35,21 @@ const (
 	MAX_AGENT_ROUNDS         = 20
 	IDLE_POLL_INTERVAL       = 5 * time.Second
 	IDLE_TIMEOUT             = 60 * time.Second
+	EMBEDDING_DIMEMSION      = 1024
 )
 
 var Client = anthropic.NewClient(
-	option.WithAPIKey(os.Getenv("API_KEY")),
-	option.WithBaseURL(os.Getenv("BASE_URL")),
+	option.WithAPIKey(API_KEY),
+	option.WithBaseURL(BASE_URL),
 )
+
+var BASE_URL = os.Getenv("BASE_URL")
+var API_KEY = os.Getenv("API_KEY")
 
 var FALLBACK_MODEL = os.Getenv("FALLBACK_MODEL")
 var MODEL = os.Getenv("MODEL")
 var PRIMARY_MODEL = MODEL
+var EMBEDDING_MODEL = os.Getenv("EMBEDDING_MODEL")
 
 var MCP_SERVER_NAME = os.Getenv("MCP_SERVER_NAME")
 var MCP_TRANSPORT = envString("MCP_TRANSPORT", "http")
