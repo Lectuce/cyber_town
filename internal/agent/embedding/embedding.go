@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	memoryInstruction = "Instruction:Compress the text into one word.\nQuery:"
+	memoryInstruction = "Instruction:为智能体长期记忆检索生成语义向量\n.\nQuery:"
 	queryInstruction  = "Target_modality: text.\n" +
 		"Instruction:根据当前问题检索最相关的长期记忆\n" +
 		"Query:"

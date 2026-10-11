@@ -9,25 +9,37 @@ import (
 )
 
 type QdrantClient struct {
-	client *qdrant.Client
+	client    *qdrant.Client
+	collecion string
 }
 
-func NewQdrantClient() (*qdrant.Client, error) {
+func NewQdrantClient(host string, port int, collection string) (*QdrantClient, error) {
 	client, err := qdrant.NewClient(&qdrant.Config{
-		Host: "localhost",
-		Port: 6334,
+		Host: host,
+		Port: port,
 	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	return client, nil
+	return &QdrantClient{
+		client:    client,
+		collecion: collection,
+	}, nil
 }
 
 func (c *QdrantClient) CreateCollection(ctx context.Context) error {
-	err := c.client.CreateCollection(ctx, &qdrant.CreateCollection{
-		CollectionName: config.QDRANT_COLLECTION_NAME,
+
+	ok, err := c.client.CollectionExists(ctx, c.collecion)
+	if err != nil {
+		return err
+	}
+	if ok {
+		return nil
+	}
+	err = c.client.CreateCollection(ctx, &qdrant.CreateCollection{
+		CollectionName: c.collecion,
 		VectorsConfig: qdrant.NewVectorsConfig(&qdrant.VectorParams{
 			Size:     config.EMBEDDING_DIMEMSION,
 			Distance: qdrant.Distance_Cosine,
@@ -40,25 +52,15 @@ func (c *QdrantClient) CreateCollection(ctx context.Context) error {
 	return nil
 }
 
-func (c *QdrantClient) Upsert(collectionName string, ctx context.Context) error {
+func (c *QdrantClient) UpsertMemory(collection string, id uint64, vector []float32, payload map[string]any, ctx context.Context) error {
 
-	operationInfo, err := c.client.Upsert(context.Background(), &qdrant.UpsertPoints{
-		CollectionName: config.QDRANT_COLLECTION_NAME,
+	_, err := c.client.Upsert(context.Background(), &qdrant.UpsertPoints{
+		CollectionName: collection,
 		Points: []*qdrant.PointStruct{
 			{
-				Id:      qdrant.NewIDNum(1),
-				Vectors: qdrant.NewVectors(0.05, 0.61, 0.76, 0.74),
-				Payload: qdrant.NewValueMap(map[string]any{"city": "Berlin"}),
-			},
-			{
-				Id:      qdrant.NewIDNum(2),
-				Vectors: qdrant.NewVectors(0.19, 0.81, 0.75, 0.11),
-				Payload: qdrant.NewValueMap(map[string]any{"city": "London"}),
-			},
-			{
-				Id:      qdrant.NewIDNum(3),
-				Vectors: qdrant.NewVectors(0.36, 0.55, 0.47, 0.94),
-				Payload: qdrant.NewValueMap(map[string]any{"city": "Moscow"}),
+				Id:      qdrant.NewIDNum(id),
+				Vectors: qdrant.NewVectorsDense(vector),
+				Payload: qdrant.NewValueMap(payload),
 			},
 		},
 	})
@@ -67,20 +69,19 @@ func (c *QdrantClient) Upsert(collectionName string, ctx context.Context) error 
 		return err
 	}
 
-	fmt.Println(operationInfo)
 	return nil
 }
 
-func (c *QdrantClient) Query() error {
+func (c *QdrantClient) QueryMemory(collection string, vector []float32, ctx context.Context) ([]*qdrant.ScoredPoint, error) {
 	searchResult, err := c.client.Query(context.Background(), &qdrant.QueryPoints{
-		CollectionName: config.QDRANT_COLLECTION_NAME,
-		Query:          qdrant.NewQuery(0.2, 0.1, 0.9, 0.7),
+		CollectionName: collection,
+		Query:          qdrant.NewQueryDense(vector),
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	fmt.Println(searchResult)
 
-	return nil
+	return searchResult, nil
 }

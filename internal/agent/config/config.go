@@ -36,6 +36,12 @@ const (
 	IDLE_POLL_INTERVAL       = 5 * time.Second
 	IDLE_TIMEOUT             = 60 * time.Second
 	EMBEDDING_DIMEMSION      = 1024
+	QDRANT_PORT              = 6334
+)
+
+const (
+	HOST                   = "localhost"
+	QDRANT_COLLECTION_NAME = "agent_memories"
 )
 
 var Client = anthropic.NewClient(
@@ -65,8 +71,6 @@ var MCP_COMMAND = os.Getenv("MCP_COMMAND")
 var MCP_ARGS = envCSV("MCP_ARGS")
 var MCP_ALLOW_TOOLS = envCSV("MCP_ALLOW_TOOLS")
 var MCP_DENY_TOOLS = envCSV("MCP_DENY_TOOLS")
-
-var QDRANT_COLLECTION_NAME = os.Getenv("QDRANT_COLLECTION_NAME")
 
 func envInt64(key string, def int64) int64 {
 	v := os.Getenv(key)

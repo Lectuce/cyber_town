@@ -3,9 +3,11 @@ package memory
 import (
 	"context"
 	"cybertown/internal/agent/config"
+	"cybertown/internal/agent/embedding"
 	"cybertown/internal/agent/recovery"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -13,7 +15,7 @@ import (
 	"github.com/anthropics/anthropic-sdk-go"
 )
 
-func ExtractMemories(messages []anthropic.MessageParam, ctx context.Context) error {
+func ExtractMemories(messages []anthropic.MessageParam, ctx context.Context, embedder *embedding.Embedder) error {
 
 	start := len(messages) - 10
 	if start < 0 {
@@ -161,6 +163,21 @@ func ExtractMemories(messages []anthropic.MessageParam, ctx context.Context) err
 		}
 
 		count++
+
+		embeddingText := fmt.Sprintf("名称：%s\n类型：%s\n摘要：%s\n内容：%s",
+			mem.Name,
+			mem.Type,
+			mem.Description,
+			mem.Body,
+		)
+
+		vector, err := embedder.EmbedMemory(embeddingText, ctx)
+		if err != nil {
+			return err
+		}
+
+		fileName := filepath.Base(path)
+
 	}
 
 	if count > 0 {

@@ -3,6 +3,7 @@ package loop
 import (
 	"context"
 	"cybertown/internal/agent/cron"
+	"cybertown/internal/agent/embedding"
 	"cybertown/internal/agent/mcpclient"
 	"cybertown/internal/agent/prompt"
 	"cybertown/internal/agent/session"
@@ -13,7 +14,7 @@ import (
 
 var AgentLock sync.Mutex
 
-func QueueProcessorLoop(cronManager *cron.Manager, ctx context.Context, promptCtx *prompt.PromptContext, getCurrentSession func() *session.Session, mcpManager *mcpclient.Manager) {
+func QueueProcessorLoop(cronManager *cron.Manager, ctx context.Context, promptCtx *prompt.PromptContext, getCurrentSession func() *session.Session, mcpManager *mcpclient.Manager, embedder *embedding.Embedder) {
 	ticker := time.NewTicker(200 * time.Millisecond)
 
 	defer ticker.Stop()
@@ -55,6 +56,7 @@ func QueueProcessorLoop(cronManager *cron.Manager, ctx context.Context, promptCt
 					currentSession,
 					cronManager,
 					mcpManager,
+					embedder,
 				)
 
 				if err != nil {
