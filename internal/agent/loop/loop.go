@@ -18,6 +18,7 @@ import (
 	"cybertown/internal/agent/tool"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/anthropics/anthropic-sdk-go"
 )
@@ -67,12 +68,13 @@ func AgentLoop(query string,
 		}
 	}
 
-	triggerQuery := ""
+	var triggerQueries []string
+
 	if query != "" {
 		history = append(history, anthropic.NewUserMessage(
 			anthropic.NewTextBlock(query),
 		))
-		triggerQuery = query
+		triggerQueries = append(triggerQueries, query)
 	}
 
 	// cron
@@ -83,25 +85,20 @@ func AgentLoop(query string,
 		history = append(history, anthropic.NewUserMessage(
 			anthropic.NewTextBlock(scheduledText),
 		))
-		triggerQuery = scheduledText
+		triggerQueries = append(triggerQueries, scheduledText)
 	}
 
-	if triggerQuery == "" {
+	if len(triggerQueries) == 0 {
 		return nil
 	}
 
-	// // 历史会话
-	// history = append(history,
-	// 	anthropic.NewUserMessage(
-	// 		anthropic.NewTextBlock(query),
-	// 	),
-	// )
+	retrievalQuery := strings.Join(triggerQueries, "\n")
 
 	defer func() {
 		currentSession.Messages = history
 	}()
 
-	memoriesContent, err := memory.LoadMemories(history, ctx)
+	memoriesContent, err := memory.LoadMemories(history, ctx, emberdder, store, retrievalQuery)
 	if err != nil {
 		fmt.Printf("[memory load error: %v]\n", err)
 		memoriesContent = ""
@@ -120,7 +117,6 @@ func AgentLoop(query string,
 	if err != nil {
 		return err
 	}
-	// memoryTurn := memory.FindUserTurn(requestMessages, triggerQuery)
 
 	// 注入记忆
 	if memoriesContent != "" {

@@ -180,13 +180,19 @@ func ExtractMemories(messages []anthropic.MessageParam, ctx context.Context, emb
 
 		fileName := filepath.Base(path)
 
-		store.UpsertMemory(store.Collecion, memoryID(fileName), vector,
+		err = store.UpsertMemory(store.Collecion, memoryID(fileName), vector,
 			map[string]any{
 				"filename":    fileName,
 				"name":        mem.Name,
 				"type":        memType,
 				"description": mem.Description,
+				"body":        mem.Body,
+				"updated_at":  time.Now(),
 			}, ctx)
+
+		if err != nil {
+			return err
+		}
 
 	}
 

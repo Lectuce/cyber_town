@@ -52,6 +52,10 @@ func newApp(ctx context.Context) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
+	err = store.CreateCollection(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	bus, err := teams.NewMessageBus()
 	if err != nil {

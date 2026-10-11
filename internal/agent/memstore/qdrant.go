@@ -48,8 +48,9 @@ func (v *VectorStore) CreateCollection(ctx context.Context) error {
 
 func (v *VectorStore) UpsertMemory(collection string, id uint64, vector []float32, payload map[string]any, ctx context.Context) error {
 
-	_, err := v.Client.Upsert(context.Background(), &qdrant.UpsertPoints{
+	_, err := v.Client.Upsert(ctx, &qdrant.UpsertPoints{
 		CollectionName: collection,
+		Wait:           qdrant.PtrOf(true),
 		Points: []*qdrant.PointStruct{
 			{
 				Id:      qdrant.NewIDNum(id),
@@ -66,8 +67,8 @@ func (v *VectorStore) UpsertMemory(collection string, id uint64, vector []float3
 	return nil
 }
 
-func (v *VectorStore) QueryMemory(collection string, vector []float32, limit uint64, ctx context.Context) ([]string, error) {
-	searchResults, err := v.Client.Query(context.Background(), &qdrant.QueryPoints{
+func (v *VectorStore) QueryMemory(collection string, vector []float32, limit uint64, ctx context.Context) ([]MemoryHit, error) {
+	searchResults, err := v.Client.Query(ctx, &qdrant.QueryPoints{
 		CollectionName: collection,
 		Query:          qdrant.NewQueryDense(vector),
 		Limit:          qdrant.PtrOf(limit),
@@ -77,18 +78,31 @@ func (v *VectorStore) QueryMemory(collection string, vector []float32, limit uin
 		return nil, err
 	}
 
-	files := make([]string, 0, len(searchResults))
+	hits := make([]MemoryHit, 0, len(searchResults))
 
 	for _, result := range searchResults {
 
 		payload := qdrant.ValueMapToMap(result.Payload)
 
-		fileName, ok := payload["filename"].(string)
-		if ok && fileName != "" {
-			files = append(files, fileName)
-		}
+		hits = append(hits, MemoryHit{
+			FileName:    stringValue(payload, "filename"),
+			Name:        stringValue(payload, "name"),
+			Type:        stringValue(payload, "type"),
+			Description: stringValue(payload, "description"),
+			Body:        stringValue(payload, "body"),
+			Score:       result.Score,
+		})
 
 	}
 
-	return files, nil
+	return hits, nil
+}
+
+func stringValue(payload map[string]any, key string) string {
+
+	v, ok := payload[key].(string)
+	if !ok || v == "" {
+		return ""
+	}
+	return v
 }
