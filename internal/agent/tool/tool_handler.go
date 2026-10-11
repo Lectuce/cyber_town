@@ -1,0 +1,40 @@
+package tool
+
+type ToolHandler func(map[string]any) (string, error)
+
+var ToolHandlers = map[string]ToolHandler{
+	"bash":             runBash,
+	"read_file":        runRead,
+	"write_file":       runWrite,
+	"edit_file":        runEdit,
+	"glob":             runGlob,
+	"todo_write":       runTodoWrite,
+	"load_skill":       runloadSkill,
+	"calculator":       runCalculator,
+	"create_task":      runCreateTask,
+	"list_tasks":       runListTasks,
+	"get_task":         runGetTask,
+	"claim_task":       runClaimTask,
+	"complete_task":    runCompleteTask,
+	"schedule_cron":    runScheduleCron,
+	"list_crons":       runListCrons,
+	"cancel_cron":      runCancleCron,
+	"spawn_teammate":   runSpawnTeammate,
+	"send_message":     runSendMessage,
+	"check_inbox":      runCheckInbox,
+	"request_shutdown": runRequestShudown,
+	"request_plan":     runRequestPlan,
+	"review_plan":      runReviewPlan,
+	"create_worktree":  runCreateWorktree,
+	"remove_worktree":  runRemoveWorktree,
+	"keep_worktree":    runKeepWroktree,
+}
+
+var SubHandlers = map[string]ToolHandler{
+	"bash":       runBash,
+	"read_file":  runRead,
+	"write_file": runWrite,
+	"edit_file":  runEdit,
+	"glob":       runGlob,
+	"calculator": runCalculator,
+}
