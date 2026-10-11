@@ -17,9 +17,9 @@ type embeddingInput struct {
 
 type embeddingRequest struct {
 	Model          string           `json:"model"`
-	Instructions   string           `json:"insructions"`
+	Instructions   string           `json:"instructions"`
 	Input          []embeddingInput `json:"input"`
-	Dimensions     uint64           `json:"demensions"`
+	Dimensions     uint64           `json:"dimensions"`
 	EncodingFormat string           `json:"encoding_format"`
 }
 

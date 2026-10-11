@@ -46,12 +46,6 @@ func newApp(ctx context.Context) (*App, error) {
 		return nil, err
 	}
 
-	vector, err := embedder.EmbedMemory("用户偏好使用中文回答", ctx)
-	if err != nil {
-		return nil, err
-	}
-	fmt.Println("embdding dimension: ", len(vector))
-
 	bus, err := teams.NewMessageBus()
 	if err != nil {
 		return nil, err

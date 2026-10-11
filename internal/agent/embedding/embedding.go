@@ -79,7 +79,7 @@ func (e *Embedder) embed(text string, instruction string, ctx context.Context) (
 	}
 
 	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Authorization", "Bearer"+e.config.APIKey)
+	request.Header.Set("Authorization", "Bearer "+e.config.APIKey)
 
 	response, err := e.client.Do(request)
 	if err != nil {
