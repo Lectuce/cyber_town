@@ -187,7 +187,7 @@ func ExtractMemories(messages []anthropic.MessageParam, ctx context.Context, emb
 				"type":        memType,
 				"description": mem.Description,
 				"body":        mem.Body,
-				"updated_at":  time.Now(),
+				"updated_at":  time.Now().UTC().Format(time.RFC3339),
 			}, ctx)
 
 		if err != nil {

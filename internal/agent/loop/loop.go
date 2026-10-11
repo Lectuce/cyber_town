@@ -98,7 +98,7 @@ func AgentLoop(query string,
 		currentSession.Messages = history
 	}()
 
-	memoriesContent, err := memory.LoadMemories(history, ctx, emberdder, store, retrievalQuery)
+	memoriesContent, err := memory.LoadMemories(ctx, emberdder, store, retrievalQuery)
 	if err != nil {
 		fmt.Printf("[memory load error: %v]\n", err)
 		memoriesContent = ""

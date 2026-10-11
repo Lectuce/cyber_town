@@ -5,11 +5,9 @@ import (
 	"cybertown/internal/agent/embedding"
 	"cybertown/internal/agent/memstore"
 	"strings"
-
-	"github.com/anthropics/anthropic-sdk-go"
 )
 
-func LoadMemories(messages []anthropic.MessageParam,
+func LoadMemories(
 	ctx context.Context,
 	embedder *embedding.Embedder,
 	store *memstore.VectorStore,
@@ -21,7 +19,7 @@ func LoadMemories(messages []anthropic.MessageParam,
 		return "", err
 	}
 
-	selectedFiles, err := store.QueryMemory(store.Collecion, vector, 5, ctx)
+	hits, err := store.QueryMemory(store.Collecion, vector, 5, ctx)
 	if err != nil {
 		return "", err
 	}
@@ -31,21 +29,27 @@ func LoadMemories(messages []anthropic.MessageParam,
 	// 	return "", err
 	// }
 
-	if len(selectedFiles) == 0 {
+	if len(hits) == 0 {
 		return "", nil
 	}
 
 	parts := []string{"<relevant_memories>"}
 
-	for _, filename := range selectedFiles {
-		content, err := readMemoryFile(filename.FileName)
-		if err != nil {
-			continue
+	for _, hit := range hits {
+		content := strings.TrimSpace(hit.Body)
+
+		if content == "" && hit.FileName != "" {
+			content, err = readMemoryFile(hit.FileName)
+			if err != nil {
+				continue
+			}
+			content = strings.TrimSpace(content)
 		}
 
-		if strings.TrimSpace(content) != "" {
+		if content != "" {
 			parts = append(parts, content)
 		}
+
 	}
 
 	parts = append(parts, "</relevant_memories>")
