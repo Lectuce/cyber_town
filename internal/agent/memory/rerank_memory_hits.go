@@ -18,6 +18,7 @@ type rerankCandidate struct {
 	Type        string  `json:"type"`
 	Description string  `json:"description"`
 	Body        string  `json:"body"`
+	UpdatedAt   string  `json:"updated_at"`
 	VectorScore float32 `json:"vector_score"`
 }
 

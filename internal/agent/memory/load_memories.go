@@ -69,6 +69,10 @@ func LoadMemories(
 
 	}
 
+	if len(parts) == 1 {
+		return "", nil
+	}
+
 	parts = append(parts, "</relevant_memories>")
 
 	return strings.Join(parts, "\n\n"), nil

@@ -101,6 +101,7 @@ func (v *VectorStore) QueryMemory(collection string, vector []float32, limit uin
 			Type:        stringValue(payload, "type"),
 			Description: stringValue(payload, "description"),
 			Body:        stringValue(payload, "body"),
+			UpdatedAt:   stringValue(payload, "updated_at"),
 			Score:       result.Score,
 		})
 

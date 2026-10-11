@@ -168,7 +168,7 @@ func ExtractMemories(messages []anthropic.MessageParam, ctx context.Context, emb
 
 		embeddingText := fmt.Sprintf("名称：%s\n类型：%s\n摘要：%s\n内容：%s",
 			name,
-			mem.Type,
+			memType,
 			mem.Description,
 			mem.Body,
 		)

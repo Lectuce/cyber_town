@@ -13,5 +13,6 @@ type MemoryHit struct {
 	Type        string
 	Description string
 	Body        string
+	UpdatedAt   string
 	Score       float32
 }
