@@ -10,6 +10,7 @@ import (
 	"cybertown/internal/agent/hook"
 	"cybertown/internal/agent/mcpclient"
 	"cybertown/internal/agent/memory"
+	"cybertown/internal/agent/memstore"
 	"cybertown/internal/agent/prompt"
 	"cybertown/internal/agent/recovery"
 	"cybertown/internal/agent/session"
@@ -21,7 +22,14 @@ import (
 	"github.com/anthropics/anthropic-sdk-go"
 )
 
-func AgentLoop(query string, ctx context.Context, promptCtx *prompt.PromptContext, currentSession *session.Session, cronManager *cron.Manager, mcpManager *mcpclient.Manager, emberdder *embedding.Embedder) error {
+func AgentLoop(query string,
+	ctx context.Context,
+	promptCtx *prompt.PromptContext,
+	currentSession *session.Session,
+	cronManager *cron.Manager,
+	mcpManager *mcpclient.Manager,
+	emberdder *embedding.Embedder,
+	store *memstore.VectorStore) error {
 	var round = 0
 	handlers := make(map[string]tool.ToolHandler, 0)
 	for name, handler := range tool.ToolHandlers {
@@ -270,7 +278,7 @@ func AgentLoop(query string, ctx context.Context, promptCtx *prompt.PromptContex
 			}
 
 			// 提取memory
-			err := memory.ExtractMemories(history, ctx, emberdder)
+			err := memory.ExtractMemories(history, ctx, emberdder, store)
 			if err != nil {
 				fmt.Printf("[memory extraction error: %v]\n", err)
 			}

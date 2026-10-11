@@ -8,23 +8,26 @@ import (
 	"cybertown/internal/agent/hook"
 	"cybertown/internal/agent/loop"
 	"cybertown/internal/agent/mcpclient"
+	"cybertown/internal/agent/memstore"
 	"cybertown/internal/agent/prompt"
 	"cybertown/internal/agent/session"
 	"cybertown/internal/agent/skills"
 	"cybertown/internal/agent/teams"
 	"cybertown/internal/agent/tool"
+
 	"fmt"
 
 	"github.com/chzyer/readline"
 )
 
 type App struct {
-	session   *session.SessionManager
-	promptCtx *prompt.PromptContext
-	cron      *cron.Manager
-	mcp       *mcpclient.Manager
-	reader    *readline.Instance
-	embedder  *embedding.Embedder
+	session     *session.SessionManager
+	promptCtx   *prompt.PromptContext
+	cron        *cron.Manager
+	mcp         *mcpclient.Manager
+	reader      *readline.Instance
+	embedder    *embedding.Embedder
+	memoryStore *memstore.VectorStore
 }
 
 func newApp(ctx context.Context) (*App, error) {
@@ -42,6 +45,10 @@ func newApp(ctx context.Context) (*App, error) {
 	}
 
 	embedder, err := embedding.NewEmbedder(config.EmbeddingConfig, nil)
+	if err != nil {
+		return nil, err
+	}
+	store, err := memstore.NewQdrantClient(config.HOST, config.QDRANT_PORT, config.QDRANT_COLLECTION_NAME)
 	if err != nil {
 		return nil, err
 	}
@@ -71,12 +78,13 @@ func newApp(ctx context.Context) (*App, error) {
 	}
 
 	return &App{
-		session:   sessionManager,
-		promptCtx: promptContext,
-		cron:      cronManager,
-		mcp:       mcpManager,
-		reader:    r,
-		embedder:  embedder,
+		session:     sessionManager,
+		promptCtx:   promptContext,
+		cron:        cronManager,
+		mcp:         mcpManager,
+		reader:      r,
+		embedder:    embedder,
+		memoryStore: store,
 	}, nil
 }
 
@@ -91,6 +99,8 @@ func (a *App) Run(ctx context.Context) error {
 		a.promptCtx,
 		a.session.CurrentSession,
 		a.mcp,
+		a.embedder,
+		a.memoryStore,
 	)
 
 	return a.runREPL(ctx)

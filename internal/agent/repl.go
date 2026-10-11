@@ -49,7 +49,7 @@ func (a *App) handleQuery(ctx context.Context, query string) error {
 
 	currentSession := a.session.CurrentSession()
 
-	err := loop.AgentLoop(query, ctx, a.promptCtx, currentSession, a.cron, a.mcp)
+	err := loop.AgentLoop(query, ctx, a.promptCtx, currentSession, a.cron, a.mcp, a.embedder, a.memoryStore)
 	if err != nil {
 		return err
 	}

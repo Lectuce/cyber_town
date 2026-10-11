@@ -4,9 +4,11 @@ import (
 	"context"
 	"cybertown/internal/agent/config"
 	"cybertown/internal/agent/embedding"
+	"cybertown/internal/agent/memstore"
 	"cybertown/internal/agent/recovery"
 	"encoding/json"
 	"fmt"
+	"hash/fnv"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -15,7 +17,7 @@ import (
 	"github.com/anthropics/anthropic-sdk-go"
 )
 
-func ExtractMemories(messages []anthropic.MessageParam, ctx context.Context, embedder *embedding.Embedder) error {
+func ExtractMemories(messages []anthropic.MessageParam, ctx context.Context, embedder *embedding.Embedder, store *memstore.VectorStore) error {
 
 	start := len(messages) - 10
 	if start < 0 {
@@ -151,7 +153,7 @@ func ExtractMemories(messages []anthropic.MessageParam, ctx context.Context, emb
 			continue
 		}
 
-		_, err := writeMemoryFile(
+		path, err := writeMemoryFile(
 			name,
 			memType,
 			mem.Description,
@@ -173,10 +175,18 @@ func ExtractMemories(messages []anthropic.MessageParam, ctx context.Context, emb
 
 		vector, err := embedder.EmbedMemory(embeddingText, ctx)
 		if err != nil {
-			return err
+			continue
 		}
 
 		fileName := filepath.Base(path)
+
+		store.UpsertMemory(store.Collecion, memoryID(fileName), vector,
+			map[string]any{
+				"filename":    fileName,
+				"name":        mem.Name,
+				"type":        memType,
+				"description": mem.Description,
+			}, ctx)
 
 	}
 
@@ -185,4 +195,17 @@ func ExtractMemories(messages []anthropic.MessageParam, ctx context.Context, emb
 	}
 
 	return nil
+}
+
+// 生成memoryID，用于向量数据库
+func memoryID(fileName string) uint64 {
+
+	h := fnv.New64a()
+	_, _ = h.Write([]byte(fileName))
+	id := h.Sum64()
+	if id == 0 {
+		return 1
+	}
+	return id
+
 }
