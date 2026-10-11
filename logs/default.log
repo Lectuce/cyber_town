@@ -1,0 +1,24 @@
+2026/10/11 22:24:56.546665 [tool_call] tool=bash id=call_rjt21mnboqg2goazrahq3u17 args=map[command:ls -la /home/yujun/projects/cybertown/ && ls ~/.cybertown 2>/dev/null; ls ~/.config/cybertown 2>/dev/null]
+2026/10/11 22:24:56.563161 [tool_result] tool=bash output=total 56
+drwxr-xr-x 9 yujun ubuntu 4096 Oct 11 17:42 .
+drwxr-xr-x 9 yujun ubuntu 4096 Oct 11 17:37 ..
+-rw-r--r-- 1 yujun ubuntu  204 Oct 11 00:02 docker-compose.yml
+drwxr-xr-x 8 yujun ubuntu 4096 Oct 11 22:19 .git
+-rw-r--r-- 1 yujun ubuntu 1516 Oct 11 10:49 go.mod
+-rw-r--r-- 1 yujun ubuntu 7599 Oct 11 10:49 go.sum
+drwxr-xr-x 4 yujun ubuntu 4096 Oct 11 17:47 internal
+drwxr-xr-x 2 yujun ubuntu 4096 Oct 11 17:42 logs
+drwxr-xr-x 2 yujun ubuntu 4096 Oct 11 17:42 .mailboxes
+-rw-r--r-- 1 yujun ubuntu   87 Oct 11 20:40 main.go
+drwxr-xr-x 4 root  root   4096 Oct 11 00:08 qdrant_storage
+drwxr-xr-x 2 yujun ubuntu 4096 Oct 11 17:42 .tasks
+drwxr-xr-x 2 yujun ubuntu 4096 Oct 11 17:42 .worktrees
+2026/10/11 22:25:01.182110 [tool_call] tool=write_file id=call_dkuyo72vhfzznr4p2js1vuw0 args=map[content:# 长期记忆（用户偏好与事实）
+
+## 用户信息
+- 内部测试代号：**蓝鲸-7429**（在涉及内部测试的上下文里使用此代号称呼用户）
+
+## 排障偏好
+- 遇到**验证码异常**时，优先第一步检查：**服务器时钟偏差**（NTP 同步 / 系统时间是否准确），再排查其他原因。
+ path:/home/yujun/projects/cybertown/MEMORY.md]
+2026/10/11 22:25:01.182351 [tool_result] tool=write_file output=wrote 337 bytes to /home/yujun/projects/cybertown/MEMORY.md

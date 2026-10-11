@@ -92,6 +92,12 @@ func rerankMemoryHits(
 
 	responseText := extractResponseText(response)
 
+	fmt.Printf(
+		"[memory rerank] candidates=%d response=%s\n",
+		len(hits),
+		responseText,
+	)
+
 	indices, err := parseRerankIndices(responseText)
 	if err != nil {
 		return nil, err

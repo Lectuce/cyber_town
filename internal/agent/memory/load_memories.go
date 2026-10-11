@@ -38,6 +38,13 @@ func LoadMemories(
 		}
 	} else {
 		hits = rerankHits
+		for _, hit := range hits {
+			fmt.Printf(
+				"[memory selected] score=%.4f name=%q\n",
+				hit.Score,
+				hit.Name,
+			)
+		}
 	}
 
 	if len(hits) == 0 {

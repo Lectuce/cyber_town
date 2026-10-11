@@ -3,6 +3,7 @@ package memstore
 import (
 	"context"
 	"cybertown/internal/agent/config"
+	"fmt"
 
 	"github.com/qdrant/go-client/qdrant"
 )
@@ -104,6 +105,12 @@ func (v *VectorStore) QueryMemory(collection string, vector []float32, limit uin
 			UpdatedAt:   stringValue(payload, "updated_at"),
 			Score:       result.Score,
 		})
+
+		fmt.Printf(
+			"[memory vector hit] score=%.4f name=%q\n",
+			result.Score,
+			stringValue(payload, "name"),
+		)
 
 	}
 
