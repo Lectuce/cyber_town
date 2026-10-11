@@ -11,7 +11,7 @@ import (
 	"github.com/anthropics/anthropic-sdk-go/option"
 )
 
-var WORKDIR = initWorkDir()
+var WORKDIR = filepath.Join(initWorkDir(), "internal", "agent")
 var SKILLSDIR = filepath.Join(WORKDIR, ".skills")
 var TOOL_RESULTS_DIR = filepath.Join(WORKDIR, ".task_outputs", "tool-results")
 var TRANSCRIPT_DIR = filepath.Join(WORKDIR, ".transcripts")
