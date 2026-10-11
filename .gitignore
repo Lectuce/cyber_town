@@ -17,6 +17,7 @@ internal/agent/backend_notes.md
 *.out
 bin/
 internal/agent/.mailboxes
+qdrant_storage
 
 .idea/
 .vscode/
