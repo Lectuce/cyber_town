@@ -23,20 +23,21 @@ var MAILBOX_DIR = filepath.Join(WORKDIR, ".mailboxes")
 var WORKTREES_DIR = filepath.Join(WORKDIR, ".worktrees")
 
 const (
-	KEEP_RECENT_TOOL_RESULTS = 3
-	MAX_CONSECUTIVE_529      = 3
-	MAX_RECOVERY_RETRIES     = 3
-	CONTEXT_LIMIT            = 50000
-	KEEP_RECENT              = 3
-	MAX_REACTIVE_RETRIES     = 1
-	PERSIST_THRESHOLD        = 30000
-	TOOL_RESULT_MAX_BYTES    = 200000
-	MAX_MESSAGES             = 50
-	MAX_AGENT_ROUNDS         = 20
-	IDLE_POLL_INTERVAL       = 5 * time.Second
-	IDLE_TIMEOUT             = 60 * time.Second
-	EMBEDDING_DIMEMSION      = 1024
-	QDRANT_PORT              = 6334
+	KEEP_RECENT_TOOL_RESULTS    = 3
+	MAX_CONSECUTIVE_529         = 3
+	MAX_RECOVERY_RETRIES        = 3
+	CONTEXT_LIMIT               = 50000
+	MEMORY_EXTRACTION_QUEUESIZE = 8
+	KEEP_RECENT                 = 3
+	MAX_REACTIVE_RETRIES        = 1
+	PERSIST_THRESHOLD           = 30000
+	TOOL_RESULT_MAX_BYTES       = 200000
+	MAX_MESSAGES                = 50
+	MAX_AGENT_ROUNDS            = 20
+	IDLE_POLL_INTERVAL          = 5 * time.Second
+	IDLE_TIMEOUT                = 60 * time.Second
+	EMBEDDING_DIMEMSION         = 1024
+	QDRANT_PORT                 = 6334
 )
 
 const (

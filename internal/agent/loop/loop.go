@@ -274,10 +274,10 @@ func AgentLoop(query string,
 			}
 
 			// 提取memory
-			err := memory.ExtractMemories(history, ctx, emberdder, store)
-			if err != nil {
-				fmt.Printf("[memory extraction error: %v]\n", err)
-			}
+			// err := memory.ExtractMemories(history, ctx, emberdder, store)
+			// if err != nil {
+			// 	fmt.Printf("[memory extraction error: %v]\n", err)
+			// }
 
 			return nil
 		}

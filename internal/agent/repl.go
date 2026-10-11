@@ -54,6 +54,11 @@ func (a *App) handleQuery(ctx context.Context, query string) error {
 		return err
 	}
 
+	err = a.memoryWorker.Enqueue(currentSession.Messages)
+	if err != nil {
+		fmt.Printf("[memory enqueue error: %v]\n", err)
+	}
+
 	inboxText, count, err := teams.ConsumeLeadInboxText()
 	if err != nil {
 		return fmt.Errorf("drain lead inbox: %v", err)

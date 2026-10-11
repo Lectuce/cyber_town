@@ -5,6 +5,7 @@ import (
 	"cybertown/internal/agent/cron"
 	"cybertown/internal/agent/embedding"
 	"cybertown/internal/agent/mcpclient"
+	"cybertown/internal/agent/memory"
 	"cybertown/internal/agent/memstore"
 	"cybertown/internal/agent/prompt"
 	"cybertown/internal/agent/session"
@@ -21,7 +22,8 @@ func QueueProcessorLoop(cronManager *cron.Manager,
 	getCurrentSession func() *session.Session,
 	mcpManager *mcpclient.Manager,
 	embedder *embedding.Embedder,
-	store *memstore.VectorStore) {
+	store *memstore.VectorStore,
+	memoryWorker *memory.ExtractionWorker) {
 	ticker := time.NewTicker(200 * time.Millisecond)
 
 	defer ticker.Stop()
@@ -72,6 +74,11 @@ func QueueProcessorLoop(cronManager *cron.Manager,
 						"[cron agent error] %v\n",
 						err,
 					)
+				}
+
+				err = memoryWorker.Enqueue(currentSession.Messages)
+				if err != nil {
+					fmt.Printf("[cron memory enqueue error: %v]\n", err)
 				}
 			}()
 		}

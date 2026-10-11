@@ -8,6 +8,7 @@ import (
 	"cybertown/internal/agent/hook"
 	"cybertown/internal/agent/loop"
 	"cybertown/internal/agent/mcpclient"
+	"cybertown/internal/agent/memory"
 	"cybertown/internal/agent/memstore"
 	"cybertown/internal/agent/prompt"
 	"cybertown/internal/agent/session"
@@ -21,13 +22,14 @@ import (
 )
 
 type App struct {
-	session     *session.SessionManager
-	promptCtx   *prompt.PromptContext
-	cron        *cron.Manager
-	mcp         *mcpclient.Manager
-	reader      *readline.Instance
-	embedder    *embedding.Embedder
-	memoryStore *memstore.VectorStore
+	session      *session.SessionManager
+	promptCtx    *prompt.PromptContext
+	cron         *cron.Manager
+	mcp          *mcpclient.Manager
+	reader       *readline.Instance
+	embedder     *embedding.Embedder
+	memoryStore  *memstore.VectorStore
+	memoryWorker *memory.ExtractionWorker
 }
 
 func newApp(ctx context.Context) (*App, error) {
@@ -81,14 +83,20 @@ func newApp(ctx context.Context) (*App, error) {
 		return nil, err
 	}
 
+	memoryWorker, err := memory.NewExtractionWorker(ctx, embedder, store, config.MEMORY_EXTRACTION_QUEUESIZE)
+	if err != nil {
+		return nil, err
+	}
+
 	return &App{
-		session:     sessionManager,
-		promptCtx:   promptContext,
-		cron:        cronManager,
-		mcp:         mcpManager,
-		reader:      r,
-		embedder:    embedder,
-		memoryStore: store,
+		session:      sessionManager,
+		promptCtx:    promptContext,
+		cron:         cronManager,
+		mcp:          mcpManager,
+		reader:       r,
+		embedder:     embedder,
+		memoryStore:  store,
+		memoryWorker: memoryWorker,
 	}, nil
 }
 
@@ -105,6 +113,7 @@ func (a *App) Run(ctx context.Context) error {
 		a.mcp,
 		a.embedder,
 		a.memoryStore,
+		a.memoryWorker,
 	)
 
 	return a.runREPL(ctx)
@@ -114,6 +123,10 @@ func (a *App) Close() {
 
 	if a.reader != nil {
 		_ = a.reader.Close()
+	}
+
+	if a.memoryWorker != nil {
+		a.memoryWorker.Close()
 	}
 
 	if a.mcp != nil {
