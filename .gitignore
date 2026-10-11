@@ -5,7 +5,7 @@ internal/agent/.memory/
 internal/agent/.task_outputs/
 internal/agent/.tasks/
 internal/agent/.cron
-internal/agent/.skills
+
 
 .env
 .env.*
@@ -17,7 +17,7 @@ internal/agent/backend_notes.md
 *.out
 bin/
 internal/agent/.mailboxes
-qdrant_storage
+/qdrant_storage
 
 .idea/
 .vscode/
