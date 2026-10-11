@@ -123,4 +123,11 @@ func (a *App) Close() {
 		}
 	}
 
+	if a.memoryStore != nil && a.memoryStore.Client != nil {
+		err := a.memoryStore.Client.Close()
+		if err != nil {
+			fmt.Printf("[Qdrant close error] %v\n", err)
+		}
+	}
+
 }

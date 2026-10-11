@@ -167,7 +167,7 @@ func ExtractMemories(messages []anthropic.MessageParam, ctx context.Context, emb
 		count++
 
 		embeddingText := fmt.Sprintf("名称：%s\n类型：%s\n摘要：%s\n内容：%s",
-			mem.Name,
+			name,
 			mem.Type,
 			mem.Description,
 			mem.Body,
@@ -183,7 +183,7 @@ func ExtractMemories(messages []anthropic.MessageParam, ctx context.Context, emb
 		err = store.UpsertMemory(store.Collecion, memoryID(fileName), vector,
 			map[string]any{
 				"filename":    fileName,
-				"name":        mem.Name,
+				"name":        name,
 				"type":        memType,
 				"description": mem.Description,
 				"body":        mem.Body,

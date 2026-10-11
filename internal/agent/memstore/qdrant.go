@@ -74,6 +74,17 @@ func (v *VectorStore) QueryMemory(collection string, vector []float32, limit uin
 		Limit:          qdrant.PtrOf(limit),
 		WithPayload:    qdrant.NewWithPayload(true),
 	})
+
+	// threshold := float32(0.5)
+
+	// searchResults, err := v.Client.Query(ctx, &qdrant.QueryPoints{
+	// 	CollectionName: v.Collecion,
+	// 	Query:          qdrant.NewQueryDense(vector),
+	// 	Limit:          qdrant.PtrOf(uint64(5)),
+	// 	ScoreThreshold: qdrant.PtrOf(threshold),
+	// 	WithPayload:    qdrant.NewWithPayload(true),
+	// })
+
 	if err != nil {
 		return nil, err
 	}

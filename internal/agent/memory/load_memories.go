@@ -4,6 +4,7 @@ import (
 	"context"
 	"cybertown/internal/agent/embedding"
 	"cybertown/internal/agent/memstore"
+	"fmt"
 	"strings"
 )
 
@@ -19,7 +20,7 @@ func LoadMemories(
 		return "", err
 	}
 
-	hits, err := store.QueryMemory(store.Collecion, vector, 5, ctx)
+	hits, err := store.QueryMemory(store.Collecion, vector, 10, ctx)
 	if err != nil {
 		return "", err
 	}
@@ -28,6 +29,16 @@ func LoadMemories(
 	// if err != nil {
 	// 	return "", err
 	// }
+
+	rerankHits, err := rerankMemoryHits(query, hits, 5, ctx)
+	if err != nil {
+		fmt.Printf("[memory rerank error: %v]\n", err)
+		if len(hits) > 5 {
+			hits = hits[:5]
+		}
+	} else {
+		hits = rerankHits
+	}
 
 	if len(hits) == 0 {
 		return "", nil
@@ -47,7 +58,13 @@ func LoadMemories(
 		}
 
 		if content != "" {
-			parts = append(parts, content)
+			parts = append(parts, fmt.Sprintf(
+				"<memory name=%q type=%q score=\"%.4f\">\n%s\n</memory>",
+				hit.Name,
+				hit.Type,
+				hit.Score,
+				content,
+			))
 		}
 
 	}
