@@ -4,6 +4,7 @@ import (
 	"context"
 	"cybertown/internal/agent/config"
 	"cybertown/internal/agent/cron"
+	"cybertown/internal/agent/embedding"
 	"cybertown/internal/agent/hook"
 	"cybertown/internal/agent/loop"
 	"cybertown/internal/agent/mcpclient"
@@ -23,6 +24,7 @@ type App struct {
 	cron      *cron.Manager
 	mcp       *mcpclient.Manager
 	reader    *readline.Instance
+	embedder  *embedding.Embedder
 }
 
 func newApp(ctx context.Context) (*App, error) {
@@ -38,6 +40,17 @@ func newApp(ctx context.Context) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	embedder, err := embedding.NewEmbedder(config.EmbeddingConfig, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	vector, err := embedder.EmbedMemory("用户偏好使用中文回答", ctx)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("embdding dimension: ", len(vector))
 
 	bus, err := teams.NewMessageBus()
 	if err != nil {
@@ -69,6 +82,7 @@ func newApp(ctx context.Context) (*App, error) {
 		cron:      cronManager,
 		mcp:       mcpManager,
 		reader:    r,
+		embedder:  embedder,
 	}, nil
 }
 

@@ -19,7 +19,7 @@ const (
 		"Query:"
 )
 
-func NewEmbedder(config config.EmbedderConfig, client *http.Client) *Embedder {
+func NewEmbedder(config config.EmbedderConfig, client *http.Client) (*Embedder, error) {
 
 	if client == nil {
 		client = &http.Client{
@@ -30,7 +30,7 @@ func NewEmbedder(config config.EmbedderConfig, client *http.Client) *Embedder {
 	return &Embedder{
 		config: config,
 		client: *client,
-	}
+	}, nil
 }
 
 func (e *Embedder) EmbedMemory(text string, ctx context.Context) ([]float32, error) {
@@ -47,7 +47,7 @@ func (e *Embedder) embed(text string, instruction string, ctx context.Context) (
 		return nil, fmt.Errorf("embedding text is empty.")
 	}
 
-	endpoint := strings.TrimRight(config.BASE_URL, "/") + "/embeddings/multimodal"
+	endpoint := strings.TrimRight(e.config.BaseURL, "/") + "/embeddings/multimodal"
 
 	payload := embeddingRequest{
 		Model: e.config.Model,
@@ -79,7 +79,7 @@ func (e *Embedder) embed(text string, instruction string, ctx context.Context) (
 	}
 
 	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Authroization", "Bearer"+e.config.APIKey)
+	request.Header.Set("Authorization", "Bearer"+e.config.APIKey)
 
 	response, err := e.client.Do(request)
 	if err != nil {
@@ -118,7 +118,7 @@ func (e *Embedder) embed(text string, instruction string, ctx context.Context) (
 	}
 
 	var result embeddingResponse
-	err = json.Unmarshal(responseBody, &request)
+	err = json.Unmarshal(responseBody, &result)
 	if err != nil {
 		return nil, err
 	}

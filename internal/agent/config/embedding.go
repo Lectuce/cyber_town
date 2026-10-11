@@ -9,7 +9,7 @@ type EmbedderConfig struct {
 
 var EmbeddingConfig = EmbedderConfig{
 	Model:     EMBEDDING_MODEL,
-	BaseURL:   BASE_URL,
+	BaseURL:   EMBEDDING_BASE_URL,
 	APIKey:    API_KEY,
 	Dimension: EMBEDDING_DIMEMSION,
 }
