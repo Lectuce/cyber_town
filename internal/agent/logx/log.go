@@ -1,13 +1,16 @@
 package logx
 
 import (
+	"cybertown/internal/agent/config"
 	"log"
 	"os"
 	"path/filepath"
 )
 
 func NewLogger(sessionID string) (*log.Logger, error) {
-	err := os.MkdirAll("logs", 0755)
+	logPath := filepath.Join(config.WORKDIR, "logs")
+
+	err := os.MkdirAll(logPath, 0755)
 	if err != nil {
 		return nil, err
 	}
