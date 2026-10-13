@@ -15,6 +15,7 @@ func (e *Engine) RunTurn(ctx context.Context, req TurnRequest) (TurnResult, erro
 		return TurnResult{}, fmt.Errorf("system prompt is required")
 	}
 	messages := make([]anthropic.MessageParam, 0)
+	messages = append(messages, req.Messages...)
 
 	if req.Input != "" {
 		messages = append(messages, anthropic.NewUserMessage(
@@ -27,10 +28,12 @@ func (e *Engine) RunTurn(ctx context.Context, req TurnRequest) (TurnResult, erro
 	for {
 		round++
 		if round > e.config.MaxRounds {
-			return TurnResult{}, nil
+			return TurnResult{
+				Messages: messages,
+			}, fmt.Errorf("maxmum agent rounds exceeded: %v", e.config.MaxRounds)
 		}
 
-		toolParams, ok := ToolDefinitions[req.ToolSet]
+		toolParams, ok := e.toolDefinitions[req.ToolSet]
 		if !ok {
 			return TurnResult{}, fmt.Errorf("no tools in set %v", req.ToolSet)
 		}
@@ -80,7 +83,7 @@ func (e *Engine) RunTurn(ctx context.Context, req TurnRequest) (TurnResult, erro
 
 			return TurnResult{
 				Messages:   messages,
-				StopReason: string(anthropic.StopReasonEndTurn),
+				StopReason: string(response.StopReason),
 				Text:       lines,
 			}, nil
 		}
@@ -111,7 +114,7 @@ func (e *Engine) RunTurn(ctx context.Context, req TurnRequest) (TurnResult, erro
 					}, fmt.Errorf("tool handler not found: %v", err)
 				}
 
-				hander, ok := handers[req.ToolSet]
+				hander, ok := handers[block.Name]
 				if !ok {
 					return TurnResult{
 						Messages: messages,
