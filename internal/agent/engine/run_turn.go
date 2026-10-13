@@ -11,6 +11,18 @@ import (
 
 func (e *Engine) RunTurn(ctx context.Context, req TurnRequest) (TurnResult, error) {
 
+	runCtx := ctx
+
+	cancel := func() {}
+
+	if e.config.TurnTimeout > 0 {
+		runCtx, cancel = context.WithTimeout(
+			ctx,
+			e.config.TurnTimeout,
+		)
+	}
+	defer cancel()
+
 	if req.SystemPrompt == "" {
 		return TurnResult{}, fmt.Errorf("system prompt is required")
 	}
@@ -30,7 +42,7 @@ func (e *Engine) RunTurn(ctx context.Context, req TurnRequest) (TurnResult, erro
 		if round > e.config.MaxRounds {
 			return TurnResult{
 				Messages: messages,
-			}, fmt.Errorf("maxmum agent rounds exceeded: %v", e.config.MaxRounds)
+			}, fmt.Errorf("maximum agent rounds exceeded: %v", e.config.MaxRounds)
 		}
 
 		toolParams, ok := e.toolDefinitions[req.ToolSet]
@@ -39,7 +51,7 @@ func (e *Engine) RunTurn(ctx context.Context, req TurnRequest) (TurnResult, erro
 		}
 		tools := BuildTools(toolParams)
 
-		response, err := e.model.Generate(ctx, anthropic.MessageNewParams{
+		response, err := e.model.Generate(runCtx, anthropic.MessageNewParams{
 			MaxTokens: e.config.MaxTokens,
 			Model:     e.config.Model,
 			System: []anthropic.TextBlockParam{
@@ -81,6 +93,14 @@ func (e *Engine) RunTurn(ctx context.Context, req TurnRequest) (TurnResult, erro
 			var lines string
 			lines = strings.Join(parts, "\n")
 
+			if response.StopReason == anthropic.StopReasonMaxTokens {
+				return TurnResult{
+					Text:       lines,
+					Messages:   messages,
+					StopReason: string(response.StopReason),
+				}, fmt.Errorf("LLM output reached max tokens")
+			}
+
 			return TurnResult{
 				Messages:   messages,
 				StopReason: string(response.StopReason),
@@ -95,7 +115,7 @@ func (e *Engine) RunTurn(ctx context.Context, req TurnRequest) (TurnResult, erro
 			case anthropic.ToolUseBlock:
 
 				var input map[string]any
-				err := json.Unmarshal([]byte(block.JSON.Input.Raw()), &input)
+				err := json.Unmarshal(block.Input, &input)
 				if err != nil {
 					toolResults = append(toolResults,
 						anthropic.NewToolResultBlock(
@@ -116,12 +136,16 @@ func (e *Engine) RunTurn(ctx context.Context, req TurnRequest) (TurnResult, erro
 
 				hander, ok := handers[block.Name]
 				if !ok {
-					return TurnResult{
-						Messages: messages,
-					}, fmt.Errorf("tool handler not found: %v", err)
+					toolResults = append(toolResults,
+						anthropic.NewToolResultBlock(
+							block.ID,
+							fmt.Sprintf("tool is not authorized: %v", block.Name),
+							true,
+						),
+					)
 				}
 
-				output, err := hander(ctx, req.Scope, input)
+				output, err := hander(runCtx, req.Scope, input)
 				if err != nil {
 					toolResults = append(toolResults,
 						anthropic.NewToolResultBlock(
@@ -145,12 +169,16 @@ func (e *Engine) RunTurn(ctx context.Context, req TurnRequest) (TurnResult, erro
 		}
 
 		if len(toolResults) == 0 {
-			break
+			return TurnResult{
+					Messages:   messages,
+					StopReason: string(response.StopReason),
+				}, fmt.Errorf(
+					"tool_use stop reason without tool call",
+				)
 		}
 
 		toolResultMessages := anthropic.NewUserMessage(toolResults...)
 		messages = append(messages, toolResultMessages)
 	}
 
-	return TurnResult{}, nil
 }

@@ -39,6 +39,9 @@ func New(model Model,
 	if config.MaxRounds <= 0 {
 		return nil, fmt.Errorf("max rounds must be positive")
 	}
+	if config.TurnTimeout < 0 {
+		return nil, fmt.Errorf("turn timeout cannot be negative")
+	}
 
 	err := validateTools(toolDefinitions, toolHandlers)
 	if err != nil {
