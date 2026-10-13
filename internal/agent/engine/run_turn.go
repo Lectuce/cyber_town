@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/anthropics/anthropic-sdk-go"
 )
@@ -64,10 +65,23 @@ func (e *Engine) RunTurn(ctx context.Context, req TurnRequest) (TurnResult, erro
 		)
 
 		if response.StopReason != anthropic.StopReasonToolUse {
+			parts := make([]string, 0)
+			for _, block := range response.Content {
+				text, ok := block.AsAny().(anthropic.TextBlock)
+				if ok {
+					if text.Text != "" {
+						parts = append(parts, strings.TrimSpace(text.Text))
+					}
+
+				}
+			}
+			var lines string
+			lines = strings.Join(parts, "\n")
+
 			return TurnResult{
 				Messages:   messages,
 				StopReason: string(anthropic.StopReasonEndTurn),
-				Text:       response.JSON.Content.Raw(),
+				Text:       lines,
 			}, nil
 		}
 
