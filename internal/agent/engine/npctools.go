@@ -26,18 +26,18 @@ var NPCTools = []anthropic.ToolParam{
 	},
 }
 
-func BuildNPCTools() []anthropic.ToolUnionParam {
+func BuildTools(tools []anthropic.ToolParam) []anthropic.ToolUnionParam {
 
-	tools := make([]anthropic.ToolUnionParam, 0, len(NPCTools))
+	toolUnions := make([]anthropic.ToolUnionParam, 0, len(tools))
 
-	for i, _ := range NPCTools {
-		toolParam := NPCTools[i]
-		tools = append(tools,
+	for i, _ := range tools {
+		toolParam := tools[i]
+		toolUnions = append(toolUnions,
 			anthropic.ToolUnionParam{
 				OfTool: &toolParam,
 			},
 		)
 	}
 
-	return tools
+	return toolUnions
 }
