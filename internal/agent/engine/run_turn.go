@@ -131,7 +131,7 @@ func (e *Engine) RunTurn(ctx context.Context, req TurnRequest) (TurnResult, erro
 				if !ok {
 					return TurnResult{
 						Messages: messages,
-					}, fmt.Errorf("tool handler not found: %v", err)
+					}, fmt.Errorf("tool handler not found: %v", req.ToolSet)
 				}
 
 				hander, ok := handers[block.Name]
@@ -143,6 +143,7 @@ func (e *Engine) RunTurn(ctx context.Context, req TurnRequest) (TurnResult, erro
 							true,
 						),
 					)
+					continue
 				}
 
 				output, err := hander(runCtx, req.Scope, input)
