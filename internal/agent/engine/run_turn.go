@@ -49,7 +49,7 @@ func (e *Engine) RunTurn(ctx context.Context, req TurnRequest) (TurnResult, erro
 		if !ok {
 			return TurnResult{}, fmt.Errorf("no tools in set %v", req.ToolSet)
 		}
-		tools := BuildTools(toolParams)
+		tools := toolParams
 
 		response, err := e.model.Generate(runCtx, anthropic.MessageNewParams{
 			MaxTokens: e.config.MaxTokens,

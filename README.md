@@ -6,6 +6,13 @@ NPCID + PlayerID 隔离的会话；
 返回文本而不是直接打印到终端。
 
 
+货车失踪事件
+→ 游戏服务 Agent 规划调查任务
+→ NPC 获得符合来源的知识
+→ 玩家通过移动、对话、调查和任务接口推进剧情
+→ 游戏规则校验任务并只发放一次奖励
+→ 重启后状态仍然保留
+
 
 
 具体做法是先新增一个独立的 `engine` 包，暂时不改现有 [loop.go](D:/GoProjects/cyber_towm/internal/agent/loop/loop.go)。这样风险最小：新 Engine 测试通过后，再把 CLI 切过去。

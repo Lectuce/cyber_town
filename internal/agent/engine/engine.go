@@ -17,13 +17,13 @@ type Config struct {
 type Engine struct {
 	model           Model
 	config          Config
-	toolDefinitions map[string][]anthropic.ToolParam
+	toolDefinitions map[string][]anthropic.ToolUnionParam
 	toolHandlers    map[string]map[string]ToolHandler
 }
 
 func New(model Model,
 	config Config,
-	toolDefinitions map[string][]anthropic.ToolParam,
+	toolDefinitions map[string][]anthropic.ToolUnionParam,
 	toolHandlers map[string]map[string]ToolHandler,
 ) (*Engine, error) {
 
@@ -58,7 +58,7 @@ func New(model Model,
 }
 
 func validateTools(
-	definitions map[string][]anthropic.ToolParam,
+	definitions map[string][]anthropic.ToolUnionParam,
 	handlers map[string]map[string]ToolHandler,
 ) error {
 
@@ -73,7 +73,11 @@ func validateTools(
 
 		for _, definition := range toolDefinitions {
 
-			name := string(definition.Name)
+			if definition.OfTool == nil {
+				continue
+			}
+
+			name := string(definition.OfTool.Name)
 
 			if name == "" {
 				return fmt.Errorf("tool name is empty in set: %v", setName)

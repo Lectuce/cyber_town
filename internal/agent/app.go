@@ -5,6 +5,7 @@ import (
 	"cybertown/internal/agent/config"
 	"cybertown/internal/agent/cron"
 	"cybertown/internal/agent/embedding"
+	"cybertown/internal/agent/engine"
 	"cybertown/internal/agent/hook"
 	"cybertown/internal/agent/loop"
 	"cybertown/internal/agent/mcpclient"
@@ -30,6 +31,7 @@ type App struct {
 	embedder     *embedding.Embedder
 	memoryStore  *memstore.VectorStore
 	memoryWorker *memory.ExtractionWorker
+	engine       *engine.Engine
 }
 
 func newApp(ctx context.Context) (*App, error) {
@@ -88,6 +90,23 @@ func newApp(ctx context.Context) (*App, error) {
 		return nil, err
 	}
 
+	engine, err := engine.New(
+		&engine.LLM{
+			Client: &config.Client,
+		},
+		engine.Config{
+			Model:       config.PRIMARY_MODEL,
+			MaxTokens:   config.DEFAULT_COMPACT_TOOKENS,
+			MaxRounds:   config.MAX_AGENT_ROUNDS,
+			TurnTimeout: config.IDLE_TIMEOUT,
+		},
+		engine.ToolDefinitions,
+		engine.ToolHandlers,
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	return &App{
 		session:      sessionManager,
 		promptCtx:    promptContext,
@@ -97,6 +116,7 @@ func newApp(ctx context.Context) (*App, error) {
 		embedder:     embedder,
 		memoryStore:  store,
 		memoryWorker: memoryWorker,
+		engine:       engine,
 	}, nil
 }
 

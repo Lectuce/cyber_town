@@ -26,6 +26,10 @@ var NPCTools = []anthropic.ToolParam{
 	},
 }
 
+var NPCToolsDefinitions = map[string][]anthropic.ToolUnionParam{
+	"npc": BuildTools(NPCTools),
+}
+
 func BuildTools(tools []anthropic.ToolParam) []anthropic.ToolUnionParam {
 
 	toolUnions := make([]anthropic.ToolUnionParam, 0, len(tools))

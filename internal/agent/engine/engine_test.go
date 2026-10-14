@@ -75,8 +75,8 @@ func newTestEngine(
 			MaxRounds:   3,
 			TurnTimeout: time.Second,
 		},
-		map[string][]anthropic.ToolParam{
-			"npc": NPCTools,
+		map[string][]anthropic.ToolUnionParam{
+			"npc": BuildTools(NPCTools),
 		},
 		map[string]map[string]ToolHandler{
 			"npc": NPCToolHandlers,
