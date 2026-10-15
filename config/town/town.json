@@ -1,0 +1,98 @@
+{
+  "world": {
+    "id": "town-1",
+    "game_time": "1348-05-01T08:00:00Z",
+    "revision": 1
+  },
+  "scenes": [
+    {
+      "world_id": "town-1",
+      "id": "town_gate",
+      "name": "城门",
+      "adjacent_scene_ids": [
+        "market"
+      ]
+    },
+    {
+      "world_id": "town-1",
+      "id": "market",
+      "name": "集市",
+      "adjacent_scene_ids": [
+        "town_gate",
+        "blacksmith_shop",
+        "tavern"
+      ]
+    },
+    {
+      "world_id": "town-1",
+      "id": "blacksmith_shop",
+      "name": "铁匠铺",
+      "adjacent_scene_ids": [
+        "market"
+      ]
+    },
+    {
+      "world_id": "town-1",
+      "id": "tavern",
+      "name": "酒馆",
+      "adjacent_scene_ids": [
+        "market"
+      ]
+    }
+  ],
+  "players": [
+    {
+      "world_id": "town-1",
+      "id": "player-1",
+      "scene_id": "town_gate",
+      "status": "active",
+      "revision": 1
+    }
+  ],
+  "npcs": [
+    {
+      "world_id": "town-1",
+      "id": "guard",
+      "name": "埃德蒙",
+      "role": "guard",
+      "persona": "严肃、警觉，说话直接，重视城镇秩序。",
+      "background": "负责守卫城门，熟悉进出城镇的商队和旅人。",
+      "scene_id": "town_gate",
+      "current_activity": "guarding_gate",
+      "revision": 1
+    },
+    {
+      "world_id": "town-1",
+      "id": "merchant",
+      "name": "马丁",
+      "role": "merchant",
+      "persona": "精明、健谈，对货物损失非常敏感。",
+      "background": "经营集市中的杂货生意，也是失踪铁矿货车的收货人。",
+      "scene_id": "market",
+      "current_activity": "waiting_for_shipment",
+      "revision": 1
+    },
+    {
+      "world_id": "town-1",
+      "id": "blacksmith",
+      "name": "罗兰",
+      "role": "blacksmith",
+      "persona": "寡言、务实、重视承诺。",
+      "background": "经营镇上的铁匠铺，需要失踪货车上的铁矿维持生产。",
+      "scene_id": "blacksmith_shop",
+      "current_activity": "repairing_tools",
+      "revision": 1
+    },
+    {
+      "world_id": "town-1",
+      "id": "innkeeper",
+      "name": "玛莎",
+      "role": "innkeeper",
+      "persona": "热情、观察敏锐，喜欢谈论有来源的镇上传闻。",
+      "background": "经营镇上的酒馆，经常从旅人和商队那里听到消息。",
+      "scene_id": "tavern",
+      "current_activity": "serving_guests",
+      "revision": 1
+    }
+  ]
+}

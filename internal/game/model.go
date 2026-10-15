@@ -26,7 +26,7 @@ type Player struct {
 	ID       string
 	SceneID  string
 	Status   string
-	Revision string
+	Revision int64
 }
 
 type NPC struct {
@@ -46,5 +46,5 @@ type NPC struct {
 	CurrentActivity string
 
 	// NPC状态版本
-	Revision string
+	Revision int64
 }
