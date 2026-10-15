@@ -8,10 +8,13 @@ import (
 )
 
 type Config struct {
-	Model       string
-	MaxTokens   int64
-	MaxRounds   int
-	TurnTimeout time.Duration
+	Model            string
+	MaxTokens        int64
+	MaxRounds        int
+	MaxModelRetries  int
+	MaxContinuations int
+	RetryBaseDelay   time.Duration
+	TurnTimeout      time.Duration
 }
 
 type Engine struct {

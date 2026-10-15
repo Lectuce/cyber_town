@@ -151,7 +151,7 @@ func (e *Engine) RunTurn(ctx context.Context, req TurnRequest) (TurnResult, erro
 					toolResults = append(toolResults,
 						anthropic.NewToolResultBlock(
 							block.ID,
-							fmt.Sprintf("invalid tool input: %v", err),
+							fmt.Sprintf("tool execution failed: %v", err),
 							true,
 						),
 					)
