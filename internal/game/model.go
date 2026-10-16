@@ -48,3 +48,10 @@ type NPC struct {
 	// NPC状态版本
 	Revision int64
 }
+
+type TownConfig struct {
+	World   World    `json:"world"`
+	Scenes  []Scene  `json:"scenes"`
+	Players []Player `json:"players"`
+	NPCs    []NPC    `json:"npcs"`
+}
