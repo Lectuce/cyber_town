@@ -13,12 +13,9 @@ type World struct {
 }
 
 type Scene struct {
-	WorldID string
+	WorldID string `json:"world_id"`
 	ID      string
 	Name    string
-
-	// 可以直接移动到的相邻场景
-	AdjacentSceneIDs []string
 }
 
 type Player struct {
@@ -30,7 +27,7 @@ type Player struct {
 }
 
 type NPC struct {
-	WorldID string
+	WorldID string ``
 	ID      string
 	Name    string
 

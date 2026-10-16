@@ -8,37 +8,12 @@
     {
       "world_id": "town-1",
       "id": "town_gate",
-      "name": "城门",
-      "adjacent_scene_ids": [
-        "market"
-      ]
-    },
-    {
-      "world_id": "town-1",
-      "id": "market",
-      "name": "集市",
-      "adjacent_scene_ids": [
-        "town_gate",
-        "blacksmith_shop",
-        "tavern"
-      ]
-    },
-    {
-      "world_id": "town-1",
-      "id": "blacksmith_shop",
-      "name": "铁匠铺",
-      "adjacent_scene_ids": [
-        "market"
-      ]
-    },
-    {
-      "world_id": "town-1",
-      "id": "tavern",
-      "name": "酒馆",
+      "name": "小镇",
       "adjacent_scene_ids": [
         "market"
       ]
     }
+
   ],
   "players": [
     {
