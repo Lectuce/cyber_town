@@ -23,6 +23,13 @@ func main() {
 	}
 	defer db.Close()
 
+	err = game.InitWorld(ctx, db, config)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("世界初始化完成，已有存档保持不变")
+
 	fmt.Printf("配置加载成功：世界=%s，玩家=%d，NPC=%d\n",
 		config.World.ID,
 		len(config.Players),
