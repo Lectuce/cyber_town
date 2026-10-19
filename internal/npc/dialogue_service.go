@@ -134,6 +134,7 @@ func (s *DialogueService) Chat(
 
 	gate := value.(chan struct{})
 
+	// 同一个玩家与同一个 NPC 的对话，上一条消息还没处理完，就拒绝新的请求
 	select {
 	case gate <- struct{}{}:
 		defer func() { <-gate }()

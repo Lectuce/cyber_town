@@ -2,7 +2,10 @@ package main
 
 import (
 	"context"
+	agentconfig "cybertown/internal/agent/config"
+	"cybertown/internal/agent/engine"
 	"cybertown/internal/game"
+	"cybertown/internal/npc"
 	"cybertown/internal/rouster"
 	"fmt"
 	"log"
@@ -55,7 +58,34 @@ func main() {
 		player.Revision,
 	)
 
+	npcEngine, err := engine.New(
+		&engine.LLM{
+			Client: &agentconfig.Client,
+		},
+		engine.Config{
+			Model:       agentconfig.PRIMARY_MODEL,
+			MaxTokens:   512,
+			MaxRounds:   3,
+			TurnTimeout: 45 * time.Second,
+		},
+		engine.ToolDefinitions,
+		engine.ToolHandlers,
+	)
+	if err != nil {
+		log.Fatalf("create NPC engine: %v", err)
+	}
+	dialogueService, err := npc.NewDialogueService(
+		ctx,
+		db,
+		&npc.Agent{
+			Engine: npcEngine,
+		},
+	)
+	if err != nil {
+		log.Fatalf("create dialogue service: %v", err)
+	}
+
 	r := gin.Default()
-	rouster.SetUpRousters(r, db)
+	rouster.SetUpRousters(r, db, dialogueService)
 
 }
