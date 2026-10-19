@@ -8,10 +8,7 @@
     {
       "world_id": "town-1",
       "id": "town_gate",
-      "name": "小镇",
-      "adjacent_scene_ids": [
-        "market"
-      ]
+      "name": "小镇"
     }
 
   ],
@@ -19,7 +16,13 @@
     {
       "world_id": "town-1",
       "id": "player-1",
-      "scene_id": "town_gate",
+      "scene_id": "town",
+      "name":"亨利",
+      "position": {
+        "x": 89,
+        "y": 58
+      },
+      "floor": 0,
       "status": "active",
       "revision": 1
     }
@@ -31,43 +34,97 @@
       "name": "埃德蒙",
       "role": "guard",
       "persona": "严肃、警觉，说话直接，重视城镇秩序。",
-      "background": "负责守卫城门，熟悉进出城镇的商队和旅人。",
-      "scene_id": "town_gate",
+      "background": "负责守卫城堡正门，熟悉进出城镇的商队和旅人。",
+      "scene_id": "town",
+      "position": {
+        "x": 226,
+        "y": 146
+      },
+      "floor": 0,
       "current_activity": "guarding_gate",
       "revision": 1
     },
+
     {
-      "world_id": "town-1",
-      "id": "merchant",
-      "name": "马丁",
-      "role": "merchant",
-      "persona": "精明、健谈，对货物损失非常敏感。",
-      "background": "经营集市中的杂货生意，也是失踪铁矿货车的收货人。",
-      "scene_id": "market",
-      "current_activity": "waiting_for_shipment",
-      "revision": 1
+    "world_id": "town-1",
+    "id": "guard_2",
+    "name": "汉斯",
+    "role": "guard",
+    "persona": "认真、稳重，关注城门附近的秩序。",
+    "background": "负责城堡正门附近的巡逻和警戒。",
+    "scene_id": "town",
+    "position": {
+      "x": 193,
+      "y": 147
     },
-    {
-      "world_id": "town-1",
-      "id": "blacksmith",
-      "name": "罗兰",
-      "role": "blacksmith",
-      "persona": "寡言、务实、重视承诺。",
-      "background": "经营镇上的铁匠铺，需要失踪货车上的铁矿维持生产。",
-      "scene_id": "blacksmith_shop",
-      "current_activity": "repairing_tools",
-      "revision": 1
+    "floor": 0,
+    "current_activity": "guarding_gate",
+    "revision": 1
+  },
+
+  {
+    "world_id": "town-1",
+    "id": "guard_3",
+    "name": "托马斯",
+    "role": "guard",
+    "persona": "警觉、寡言，习惯观察远处的动静。",
+    "background": "负责城堡三楼高台的瞭望和警戒。",
+    "scene_id": "town",
+    "position": {
+      "x": 201,
+      "y": 106
     },
-    {
-      "world_id": "town-1",
-      "id": "innkeeper",
-      "name": "玛莎",
-      "role": "innkeeper",
-      "persona": "热情、观察敏锐，喜欢谈论有来源的镇上传闻。",
-      "background": "经营镇上的酒馆，经常从旅人和商队那里听到消息。",
-      "scene_id": "tavern",
-      "current_activity": "serving_guests",
-      "revision": 1
-    }
-  ]
+    "floor": 3,
+    "current_activity": "keeping_watch",
+    "revision": 1
+  },
+  {
+    "world_id": "town-1",
+    "id": "merchant",
+    "name": "马丁",
+    "role": "merchant",
+    "persona": "精明、健谈，对货物损失非常敏感。",
+    "background": "经营集市中的杂货生意，也是失踪铁矿货车的收货人。",
+    "scene_id": "town",
+    "current_activity": "waiting_for_shipment",
+    "revision": 1,
+    "position": {
+      "x": 236,
+      "y": 18
+    },
+    "floor": 0
+  },
+  {
+    "world_id": "town-1",
+    "id": "blacksmith",
+    "name": "罗兰",
+    "role": "blacksmith",
+    "persona": "寡言、务实、重视承诺。",
+    "background": "经营镇上的铁匠铺，需要失踪货车上的铁矿维持生产。",
+    "scene_id": "town",
+    "position": {
+      "x": 431,
+      "y": -15
+    },
+    "floor": 0,
+    "current_activity": "repairing_tools",
+    "revision": 1
+  },
+  {
+    "world_id": "town-1",
+    "id": "innkeeper",
+    "name": "玛莎",
+    "role": "innkeeper",
+    "persona": "热情、观察敏锐，喜欢谈论有来源的镇上传闻。",
+    "background": "经营镇上的酒馆，经常从旅人和商队那里听到消息。",
+    "scene_id": "town",
+    "position": {
+      "x": 425,
+      "y": 100
+    },
+    "floor": 0,
+    "current_activity": "serving_guests",
+    "revision": 1
+  }
+]
 }
