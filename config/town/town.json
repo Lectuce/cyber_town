@@ -7,7 +7,7 @@
   "scenes": [
     {
       "world_id": "town-1",
-      "id": "town_gate",
+      "id": "town",
       "name": "小镇"
     }
 
