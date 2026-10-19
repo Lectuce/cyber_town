@@ -3,9 +3,12 @@ package main
 import (
 	"context"
 	"cybertown/internal/game"
+	"cybertown/internal/rouster"
 	"fmt"
 	"log"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -51,5 +54,8 @@ func main() {
 		player.Floor,
 		player.Revision,
 	)
+
+	r := gin.Default()
+	rouster.SetUpRousters(r, db)
 
 }
