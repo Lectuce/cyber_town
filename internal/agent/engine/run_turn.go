@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
+	"time"
 
 	"github.com/anthropics/anthropic-sdk-go"
 )
@@ -51,6 +53,8 @@ func (e *Engine) RunTurn(ctx context.Context, req TurnRequest) (TurnResult, erro
 		}
 		tools := toolParams
 
+		started := time.Now()
+
 		response, err := e.model.Generate(runCtx, anthropic.MessageNewParams{
 			MaxTokens: e.config.MaxTokens,
 			Model:     e.config.Model,
@@ -73,6 +77,27 @@ func (e *Engine) RunTurn(ctx context.Context, req TurnRequest) (TurnResult, erro
 			return TurnResult{
 				Messages: messages,
 			}, fmt.Errorf("llm return nil response")
+		}
+
+		elapsed := time.Since(started)
+
+		if err != nil {
+			log.Printf(
+				"NPC model turn=%s round=%d elapsed=%s failed",
+				req.Scope.TurnID,
+				round,
+				elapsed,
+			)
+		} else if response != nil {
+			log.Printf(
+				"NPC model turn=%s round=%d elapsed=%s stop=%s input_tokens=%d output_tokens=%d",
+				req.Scope.TurnID,
+				round,
+				elapsed,
+				response.StopReason,
+				response.Usage.InputTokens,
+				response.Usage.OutputTokens,
+			)
 		}
 
 		messages = append(messages,
