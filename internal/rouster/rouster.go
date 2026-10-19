@@ -4,7 +4,9 @@ import (
 	"cybertown/internal/game"
 	"cybertown/internal/npc"
 	"database/sql"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"sync"
@@ -47,7 +49,7 @@ func SetUpRousters(r *gin.Engine, db *sql.DB, dialogueService *npc.DialogueServi
 	var chatMu sync.Mutex
 	var lastChat time.Time
 
-	r.POST("/api/npcs/:npcID/chat", func(c *gin.Context) {
+	chatHandler := func(c *gin.Context) {
 		var body struct {
 			RequestID string `json:"request_id" binding:"required"`
 			Message   string `json:"message" binding:"required"`
@@ -81,6 +83,52 @@ func SetUpRousters(r *gin.Engine, db *sql.DB, dialogueService *npc.DialogueServi
 			return
 		}
 
+		isStream := c.FullPath() == "/api/npcs/:npcID/chat/stream"
+		streamStarted := false
+
+		// 向浏览器发送一个完整的 SSE 事件。
+		sendEvent := func(event string, payload any) error {
+			if err := c.Request.Context().Err(); err != nil {
+				return err
+			}
+
+			data, err := json.Marshal(payload)
+			if err != nil {
+				return err
+			}
+
+			if !streamStarted {
+				c.Header("Content-Type", "text/event-stream; charset=utf-8")
+				c.Header("Cache-Control", "no-cache, no-transform")
+				c.Header("X-Accel-Buffering", "no")
+				streamStarted = true
+			}
+
+			_, err = fmt.Fprintf(
+				c.Writer,
+				"event: %s\ndata: %s\n\n",
+				event,
+				data,
+			)
+			if err != nil {
+				return err
+			}
+
+			// 立即把本段数据交给底层连接。
+			c.Writer.Flush()
+			return nil
+		}
+
+		var onText func(string) error
+
+		if isStream {
+			onText = func(text string) error {
+				return sendEvent("delta", gin.H{
+					"text": text,
+				})
+			}
+		}
+
 		result, err := dialogueService.Chat(
 			c.Request.Context(),
 			npc.ChatRequest{
@@ -90,8 +138,25 @@ func SetUpRousters(r *gin.Engine, db *sql.DB, dialogueService *npc.DialogueServi
 				RequestID: body.RequestID,
 				Message:   body.Message,
 			},
+			onText,
 		)
+
 		if err != nil {
+			// 已经开始发送流，就不能再切换成普通 JSON 错误响应。
+			if streamStarted {
+				log.Printf("NPC stream failed: %v", err)
+
+				sendErr := sendEvent("error", gin.H{
+					"request_id": body.RequestID,
+					"error":      "NPC dialogue failed",
+				})
+				if sendErr != nil {
+					log.Printf("send stream error event: %v", sendErr)
+				}
+
+				return
+			}
+
 			switch {
 			case errors.Is(err, npc.ErrInvalidRequest),
 				errors.Is(err, npc.ErrInvalidMessage):
@@ -124,13 +189,26 @@ func SetUpRousters(r *gin.Engine, db *sql.DB, dialogueService *npc.DialogueServi
 			return
 		}
 
+		if isStream {
+			// Chat 返回成功，代表整轮生成和数据库保存都已成功。
+			err := sendEvent("done", result)
+			if err != nil {
+				log.Printf("send stream completion: %v", err)
+			}
+			return
+		}
+
 		c.JSON(http.StatusOK, result)
-	})
+	}
+
+	r.POST("/api/npcs/:npcID/chat", chatHandler)
+
+	r.POST("/api/npcs/:npcID/chat/stream", chatHandler)
 
 	log.Println("game server listening on http://127.0.0.1:8080")
 
-	if err := server.ListenAndServe(); err != nil &&
-		!errors.Is(err, http.ErrServerClosed) {
+	err := server.ListenAndServe()
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Printf("HTTP server stopped: %v", err)
 	}
 

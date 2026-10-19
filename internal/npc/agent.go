@@ -19,6 +19,7 @@ func (a *Agent) Reply(
 	player game.Player,
 	history []anthropic.MessageParam,
 	req ChatRequest,
+	onText func(string) error,
 ) (engine.TurnResult, error) {
 	if a == nil || a.Engine == nil {
 		return engine.TurnResult{}, fmt.Errorf("NPC engine is required")
@@ -45,5 +46,6 @@ func (a *Agent) Reply(
 		Messages:     history,
 		Input:        req.Message,
 		ToolSet:      "npc",
+		OnText:       onText,
 	})
 }

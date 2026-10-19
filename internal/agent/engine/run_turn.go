@@ -55,7 +55,7 @@ func (e *Engine) RunTurn(ctx context.Context, req TurnRequest) (TurnResult, erro
 
 		started := time.Now()
 
-		response, err := e.model.Generate(runCtx, anthropic.MessageNewParams{
+		params := anthropic.MessageNewParams{
 			MaxTokens: e.config.MaxTokens,
 			Model:     e.config.Model,
 			System: []anthropic.TextBlockParam{
@@ -65,7 +65,26 @@ func (e *Engine) RunTurn(ctx context.Context, req TurnRequest) (TurnResult, erro
 			},
 			Messages: messages,
 			Tools:    tools,
-		})
+		}
+
+		var response *anthropic.Message
+		var err error
+
+		if req.OnText != nil {
+			streamingModel, ok := e.model.(StreamingModel)
+			if !ok {
+				return TurnResult{}, fmt.Errorf(
+					"model does not support streaming",
+				)
+			}
+			response, err = streamingModel.GenerateStream(
+				runCtx,
+				params,
+				req.OnText,
+			)
+		} else {
+			response, err = e.model.Generate(runCtx, params)
+		}
 
 		if err != nil {
 			return TurnResult{

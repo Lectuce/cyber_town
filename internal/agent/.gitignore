@@ -5,7 +5,7 @@ logs/
 .task_outputs/
 .tasks/
 .cron
-
+data/
 
 .env
 .env.*

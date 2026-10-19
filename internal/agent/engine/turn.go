@@ -19,6 +19,7 @@ type TurnRequest struct {
 	Messages     []anthropic.MessageParam
 	Input        string
 	ToolSet      string
+	OnText       func(string) error `json:"-"`
 }
 
 // 这一轮agent执行完成后的返回的结果

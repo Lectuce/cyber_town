@@ -96,6 +96,7 @@ func NewDialogueService(ctx context.Context, db *sql.DB, agent *Agent) (*Dialogu
 func (s *DialogueService) Chat(
 	ctx context.Context,
 	req ChatRequest,
+	onText func(string) error,
 ) (ChatResponse, error) {
 	if req.WorldID == "" || req.PlayerID == "" ||
 		req.NPCID == "" || req.RequestID == "" ||
@@ -227,7 +228,7 @@ func (s *DialogueService) Chat(
 		history = append(history, turns[i]...)
 	}
 
-	result, err := s.agent.Reply(ctx, character, player, history, req)
+	result, err := s.agent.Reply(ctx, character, player, history, req, onText)
 	if err != nil {
 		return ChatResponse{}, fmt.Errorf("NPC reply: %w", err)
 	}
