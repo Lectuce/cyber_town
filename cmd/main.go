@@ -37,4 +37,19 @@ func main() {
 
 	fmt.Println("数据库表结构已创建：data/game.db")
 
+	player, err := game.GetPlayer(ctx, db, "town-1", "player-1")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf(
+		"玩家：%s，场景：%s，位置：(%.2f, %.2f)，楼层：%d，版本：%d\n",
+		player.Name,
+		player.SceneID,
+		player.Position.X,
+		player.Position.Y,
+		player.Floor,
+		player.Revision,
+	)
+
 }
