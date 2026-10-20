@@ -17,4 +17,6 @@ func SetUpRousters(r *gin.Engine, db *sql.DB, dialogueService *npc.DialogueServi
 	r.POST("/api/npcs/:npcID/chat", chatHandler)
 	r.POST("/api/npcs/:npcID/chat/stream", chatHandler)
 
+	r.GET("/api/requests/:questID")
+	r.POST("/api/quests/:questID/accept")
 }
