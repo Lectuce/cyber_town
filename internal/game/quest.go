@@ -4,7 +4,7 @@ import "fmt"
 
 const (
 	QuestStatusActive    = "active"
-	QuestStatusComlpeted = "completed"
+	QuestStatusCompleted = "completed"
 )
 
 // 任务规则

@@ -7,8 +7,10 @@ import (
 	"cybertown/internal/game"
 	"cybertown/internal/npc"
 	"cybertown/internal/rouster"
+	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -87,5 +89,18 @@ func main() {
 
 	r := gin.Default()
 	rouster.SetUpRousters(r, db, dialogueService)
+
+	server := &http.Server{
+		Addr:              "127.0.0.1:8080",
+		Handler:           r,
+		ReadHeaderTimeout: 5 * time.Second,
+	}
+
+	log.Println("game server listening on http://127.0.0.1:8080")
+
+	err = server.ListenAndServe()
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
+		log.Printf("HTTP server stopped: %v", err)
+	}
 
 }
