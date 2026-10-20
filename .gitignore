@@ -5,7 +5,7 @@ internal/agent/.memory/
 internal/agent/.task_outputs/
 internal/agent/.tasks/
 internal/agent/.cron
-
+/data
 
 .env
 .env.*
