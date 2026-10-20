@@ -60,6 +60,22 @@ CREATE TABLE IF NOT EXISTS npcs (
 	FOREIGN KEY (world_id, scene_id)
 		REFERENCES scenes(world_id, id)
 );
+
+CREATE TABLE IF NOT EXISTS player_quests (
+	world_id TEXT NOT NULL,
+	player_id TEXT NOT NULL,
+	quest_id TEXT NOT NULL,
+	status TEXT NOT NULL
+		CHECK (status IN ('active', 'completed')),
+	revision INTEGER NOT NULL DEFAULT 1
+		CHECK (revision >= 1),
+
+	PRIMARY KEY (world_id, player_id, quest_id),
+
+	FOREIGN KEY (world_id, player_id)
+		REFERENCES players(world_id, id)
+);
+
 `
 
 func OpenDatabase(ctx context.Context, path string) (*sql.DB, error) {
