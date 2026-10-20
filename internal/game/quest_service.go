@@ -3,8 +3,11 @@ package game
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 )
+
+var ErrPlayerInactive = errors.New("player is not active")
 
 func AcceptQuest(ctx context.Context, db *sql.DB, worldID string, playerID string, questID string) (PlayerQuest, error) {
 	if worldID == "" || playerID == "" || questID == "" {
@@ -24,7 +27,7 @@ func AcceptQuest(ctx context.Context, db *sql.DB, worldID string, playerID strin
 	}
 
 	if player.Status != "active" {
-		return PlayerQuest{}, fmt.Errorf("player cannot accept quests while status is %q", player.Status)
+		return PlayerQuest{}, ErrPlayerInactive
 	}
 
 	// 确认这个世界中确实存在任务发布者。
