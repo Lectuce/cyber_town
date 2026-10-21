@@ -37,3 +37,7 @@ func PlayerHandler(db *sql.DB) gin.HandlerFunc {
 		c.JSON(http.StatusOK, player)
 	}
 }
+
+func PlayerPosition() {
+
+}

@@ -30,8 +30,14 @@ func SavePlayerPosition(ctx context.Context, db *sql.DB, worldID string, playerI
 		return Player{}, err
 	}
 
+	if player.Status != "active" {
+		return Player{}, ErrPlayerInactive
+	}
+
 	if player.Revision != expectedRevision {
-		return Player{}, fmt.Errorf("player cannot move while status is %v", player.Status)
+		return Player{}, fmt.Errorf("player revision conflict: expected %d, current %d",
+			expectedRevision,
+			player.Revision)
 	}
 
 	// 坐标和楼层都没有变化，就不用更新存档。
@@ -39,7 +45,7 @@ func SavePlayerPosition(ctx context.Context, db *sql.DB, worldID string, playerI
 		return player, nil
 	}
 
-	err = UpadtePlayerPosition(ctx, db, player.WorldID, playerID, target, player.Floor, expectedRevision)
+	err = UpadtePlayerPosition(ctx, db, player.WorldID, playerID, target, floor, expectedRevision)
 	if err != nil {
 		return Player{}, fmt.Errorf("move player: %w", err)
 	}
