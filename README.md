@@ -1,807 +1,204 @@
-一个共享模型调用 Engine；
-NPCID + PlayerID 隔离的会话；
-根据 NPC 数据生成角色提示词；
-查询世界状态和关系的只读工具；
-一个受游戏逻辑校验的行为工具；
-返回文本而不是直接打印到终端。
+# Ironvale Chronicles
 
+> 铁谷纪事 · Agent-Driven Narrative RPG
 
-货车失踪事件
-→ 游戏服务 Agent 规划调查任务
-→ NPC 获得符合来源的知识
-→ 玩家通过移动、对话、调查和任务接口推进剧情
-→ 游戏规则校验任务并只发放一次奖励
-→ 重启后状态仍然保留
+一款正在开发中的 AI 原生单人叙事 RPG。玩家来到一座依赖铁矿贸易的中世纪小镇，通过自由语言与商人、铁匠、守卫和酒馆老板交涉，调查一辆离奇失踪的铁矿货车。
 
+项目的重点不是让大模型“扮演整个世界”，而是让 Agent 成为游戏系统中的受限参与者：NPC Agent 理解玩家表达、维持角色立场并申请合法行动；确定性的 GameService 保存事实、校验规则并执行状态变更；导演 Agent 只在关键事件后规划可验证的后续机会。
 
+## 项目亮点
 
-具体做法是先新增一个独立的 `engine` 包，暂时不改现有 [loop.go](D:/GoProjects/cyber_towm/internal/agent/loop/loop.go)。这样风险最小：新 Engine 测试通过后，再把 CLI 切过去。
+- **自由语言驱动玩法**：玩家无需从固定选项中选择，可以直接询问、解释、交涉或提出条件。
+- **Agent 与规则分层**：模型负责语言理解和开放式决策，任务、证据、位置与奖励始终由游戏服务裁决。
+- **角色级上下文隔离**：会话按 `WorldID + PlayerID + NPCID` 隔离，NPC 只获得自己的身份与对话历史。
+- **可控的工具调用**：共享 Engine 通过服务端选定的 ToolSet 限制能力，并将不可授权的调用挡在规则边界之外。
+- **流式游戏对话**：Gin 提供 SSE 接口，Godot 客户端可以逐段展示 NPC 回复。
+- **可恢复的权威状态**：SQLite 持久化世界、玩家、NPC、任务、证据和对话；初始化不会覆盖已有存档。
+- **并发与幂等保护**：玩家位置使用版本号做乐观并发控制；对话使用 `request_id` 避免重复模型调用和重复落库。
 
-`agent-builder` 的原则在这里体现为一个很小的循环：
+## 核心玩法
 
-```text
-模型生成
-→ 有工具调用就执行工具并继续
-→ 没有工具调用就返回文本
+第一版围绕“失踪的铁矿货车”展开：
+
+1. 玩家向商人马丁了解失踪货物并接受调查任务。
+2. 玩家在小镇中移动，与不同 NPC 交谈，拼接各自掌握的信息。
+3. 玩家前往货车现场进行调查，游戏服务根据任务状态、坐标和楼层校验行为。
+4. 找到的证据被写入存档，并在后续对话和任务流程中成为可验证事实。
+5. 后续版本将加入证据出示、物品交换、任务提交与导演 Agent 驱动的分支机会。
+
+## 架构设计
+
+```mermaid
+flowchart LR
+    Godot[Godot 客户端] -->|HTTP / SSE| API[Gin API]
+    API --> Dialogue[NPC 对话服务]
+    API --> Game[GameService]
+    Dialogue --> Engine[共享 Agent Engine]
+    Engine --> LLM[LLM API]
+    Engine --> Tools[受限工具集]
+    Tools --> Game
+    Dialogue --> DB[(SQLite)]
+    Game --> DB
+    DB -. 重要游戏事件 .-> Director[导演 Agent · 规划中]
+    Director -. 合法计划 .-> Game
 ```
 
-### 1. 先记录当前基线
+### 职责边界
 
-在项目根目录执行：
+| 模块 | 职责 | 是否拥有最终决定权 |
+| --- | --- | --- |
+| NPC Agent | 理解玩家表达、生成符合人设的回应、申请角色行动 | 否 |
+| 导演 Agent | 在重要事件后组合合法的剧情机会 | 否 |
+| Agent Engine | 执行模型—工具循环，控制轮数、超时和工具权限 | 否 |
+| GameService | 校验位置、任务、证据、物品和状态版本 | 是 |
+| SQLite | 保存可恢复的权威游戏状态与对话记录 | 是 |
+
+这条边界解决了生成式游戏最关键的问题：NPC 可以灵活回应，但不能因为一句台词就凭空创造证据、完成任务或发放奖励。
+
+## 当前进度
+
+| 能力 | 状态 |
+| --- | --- |
+| 小镇、玩家与 6 名 NPC 的配置化初始化 | ✅ 已完成 |
+| 玩家坐标、楼层与版本号持久化 | ✅ 已完成 |
+| 共享 Agent Engine 与工具调用循环 | ✅ 已完成 |
+| NPC 人设提示词与独立对话历史 | ✅ 已完成 |
+| 普通 HTTP 对话与 SSE 流式输出 | ✅ 已完成 |
+| 请求幂等、会话串行化与基础限流 | ✅ 已完成 |
+| 货车任务接受、现场范围校验与证据入库 | ✅ 已完成 |
+| Godot 场景及服务端联调 | 🚧 进行中 |
+| 完整任务提交、物品校验与一次性奖励 | ⏳ 待完成 |
+| NPC 查询事实、出示证据与受限行动工具 | ⏳ 待完成 |
+| 重要事件驱动的导演 Agent | ⏳ 待完成 |
+| 长期记忆、成本控制与降级策略 | ⏳ 待完成 |
+
+> 当前仓库主要包含 Go 游戏服务与 Agent 基础设施；Godot 客户端和 Linux 部署环境不在本仓库中。上表以当前代码为准，不把规划中的能力计为已完成。
+
+## 技术栈
+
+- **客户端**：Godot
+- **服务端**：Go、Gin
+- **Agent**：Anthropic Go SDK、自研模型—工具执行循环
+- **存储**：SQLite（权威状态与会话）
+- **长期记忆预研**：Qdrant（不承担任务、物品或世界事实判断）
+- **通信**：REST、Server-Sent Events
+
+## 快速开始
+
+### 环境要求
+
+- Go `1.26.5`（以 `go.mod` 为准）
+- 一个与 Anthropic Messages API 兼容的模型服务
+
+### 1. 配置模型
+
+当前程序直接读取环境变量，不会自动加载 `.env`：
+
+```powershell
+$env:API_KEY = "your-api-key"
+$env:MODEL = "your-model-name"
+
+# 使用兼容服务时再设置
+$env:BASE_URL = "https://your-endpoint.example/v1"
+```
+
+### 2. 启动游戏服务
+
+```powershell
+go run ./cmd
+```
+
+服务默认监听 `http://127.0.0.1:8080`。首次启动会根据 `config/town/town.json` 创建 `data/game.db`；后续启动会保留已有存档。
+
+### 3. 验证核心接口
+
+```powershell
+# 查询玩家
+Invoke-RestMethod http://127.0.0.1:8080/api/player
+
+# 接受货车调查任务
+Invoke-RestMethod `
+  -Method Post `
+  http://127.0.0.1:8080/api/quests/missing_iron_cart/accept
+
+# 与商人对话
+$body = @{
+  request_id = [guid]::NewGuid().ToString()
+  message = "那辆铁矿货车最后在哪里出现？"
+} | ConvertTo-Json
+
+Invoke-RestMethod `
+  -Method Post `
+  -ContentType "application/json" `
+  -Body $body `
+  http://127.0.0.1:8080/api/npcs/merchant/chat
+```
+
+流式对话端点为：
+
+```text
+POST /api/npcs/:npcID/chat/stream
+```
+
+它以 SSE `delta` 事件发送增量文本，并以 `done` 事件返回已经持久化的完整结果。
+
+## API 概览
+
+| 方法 | 路径 | 用途 |
+| --- | --- | --- |
+| `GET` | `/api/player` | 查询当前玩家状态 |
+| `PUT` | `/api/player/position` | 保存坐标、楼层和状态版本 |
+| `POST` | `/api/npcs/:npcID/chat` | 获取完整 NPC 回复 |
+| `POST` | `/api/npcs/:npcID/chat/stream` | 以 SSE 获取流式 NPC 回复 |
+| `GET` | `/api/quests/:questID` | 查询任务定义与玩家进度 |
+| `POST` | `/api/quests/:questID/accept` | 接受任务 |
+| `POST` | `/api/investigation-points/abandoned_cart/inspect` | 调查废弃货车并记录证据 |
+
+当前接口使用固定的开发身份 `town-1 / player-1`，尚未实现生产级账号与鉴权。
+
+## 项目结构
+
+```text
+.
+├── cmd/                         # 游戏 HTTP 服务入口
+├── config/town/                 # 世界、玩家与 NPC 初始配置
+├── internal/agent/engine/       # 可复用的模型—工具执行核心
+├── internal/game/               # 权威状态、任务、调查与 SQLite 存储
+├── internal/handler/            # HTTP 参数校验与响应映射
+├── internal/npc/                # NPC 提示词、Agent 与对话服务
+├── internal/rouster/            # Gin 路由注册
+└── docs/                        # 开发大纲与早期技术方案
+```
+
+## 测试
 
 ```powershell
 go test ./...
 go vet ./...
 ```
 
-记录已有失败。完成 Engine 后还要再执行一次，确认没有引入新问题。
+Agent Engine 使用假模型覆盖两条关键路径：直接文本回复，以及工具调用后继续生成最终回复。测试不需要真实 API Key。
 
-### 2. 创建目录
+## 路线图
+
+1. 完成 Godot 流式对话展示和异常处理。
+2. 补齐固定调查故事的任务、物品、证据、知识范围和奖励闭环。
+3. 为 NPC 接入事实查询、行动条件查询和受限行动申请工具。
+4. 以重要游戏事件触发导演 Agent，并由 GameService 校验、执行其计划。
+5. 加入长期记忆、模型分级、缓存、预算和不可用时的玩法降级。
+
+详细方向见 [`docs/cybertown-development-outline.md`](docs/cybertown-development-outline.md)。早期架构讨论保留在 [`docs/medieval-town-agent-plan.md`](docs/medieval-town-agent-plan.md)，如有冲突，以当前开发大纲和实际代码为准。
+
+## 设计原则
 
 ```text
-internal/agent/engine/
-├── turn.go
-├── model.go
-├── tool.go
-├── engine.go
-└── engine_test.go
+玩家自由表达
+→ NPC Agent 理解并提出合法行动
+→ GameService 校验、执行并保存真实变化
+→ 重要事件触发导演 Agent
+→ 导演提出可执行的后续计划
+→ GameService 再次校验并落地
+→ 玩家在世界中看到变化
 ```
 
-### 3. 定义调用输入和输出
-
-创建 `internal/agent/engine/turn.go`：
-
-```go
-package engine
-
-import "github.com/anthropics/anthropic-sdk-go"
-
-type Scope struct {
-	WorldID   string
-	AgentKind string
-	AgentID   string
-	PlayerID  string
-	SessionID string
-	TurnID    string
-}
-
-type TurnRequest struct {
-	Scope        Scope
-	SystemPrompt string
-	Messages     []anthropic.MessageParam
-	Input        string
-	ToolSet      string
-}
-
-type TurnResult struct {
-	Text       string
-	Messages   []anthropic.MessageParam
-	StopReason string
-}
-```
-
-`Scope` 只允许调用方设置。之后工具参数里即使出现 `player_id`，也不能覆盖这里的 `PlayerID`。
-
-### 4. 抽象模型调用
-
-创建 `internal/agent/engine/model.go`：
-
-```go
-package engine
-
-import (
-	"context"
-	"errors"
-
-	"github.com/anthropics/anthropic-sdk-go"
-)
-
-type Model interface {
-	Generate(
-		ctx context.Context,
-		params anthropic.MessageNewParams,
-	) (*anthropic.Message, error)
-}
-
-type AnthropicModel struct {
-	Client *anthropic.Client
-}
-
-func (m AnthropicModel) Generate(
-	ctx context.Context,
-	params anthropic.MessageNewParams,
-) (*anthropic.Message, error) {
-	if m.Client == nil {
-		return nil, errors.New("anthropic client is nil")
-	}
-
-	return m.Client.Messages.New(ctx, params)
-}
-```
-
-后面真实环境可以这样创建：
-
-```go
-model := engine.AnthropicModel{
-	Client: &config.Client,
-}
-```
-
-测试使用假模型，不需要 API Key。
-
-### 5. 定义工具和权限集合
-
-创建 `internal/agent/engine/tool.go`：
-
-```go
-package engine
-
-import (
-	"context"
-
-	"github.com/anthropics/anthropic-sdk-go"
-)
-
-type ToolHandler func(
-	ctx context.Context,
-	scope Scope,
-	input map[string]any,
-) (string, error)
-
-type Tool struct {
-	Definition anthropic.ToolUnionParam
-	Execute    ToolHandler
-}
-
-type ToolSet map[string]Tool
-```
-
-第一版测试可以注册一个非常简单的工具：
-
-```go
-get_agent_name := Tool{
-	Definition: anthropic.ToolUnionParamOfTool(
-		anthropic.ToolInputSchemaParam{
-			Type:       "object",
-			Properties: map[string]any{},
-			Required:   []string{},
-		},
-		"get_agent_name",
-	),
-	Execute: func(
-		ctx context.Context,
-		scope Scope,
-		input map[string]any,
-	) (string, error) {
-		return scope.AgentID, nil
-	},
-}
-```
-
-注册表结构为：
-
-```go
-map[string]ToolSet{
-	"npc": {
-		"get_agent_name": getAgentName,
-	},
-	"director": {},
-	"cli":      {},
-}
-```
-
-这里的第一层名称由服务端选择。将来玩家发送 HTTP 请求时，不能在请求体里指定 `"tool_set": "cli"`。
-
-### 6. 实现 Engine 构造函数
-
-在 `internal/agent/engine/engine.go` 中先定义配置：
-
-```go
-package engine
-
-import (
-	"context"
-	"encoding/json"
-	"errors"
-	"fmt"
-	"sort"
-	"strings"
-	"time"
-
-	"github.com/anthropics/anthropic-sdk-go"
-)
-
-type Config struct {
-	Model       string
-	MaxTokens   int64
-	MaxRounds   int
-	TurnTimeout time.Duration
-}
-
-type Engine struct {
-	model    Model
-	config   Config
-	toolSets map[string]ToolSet
-}
-
-func New(
-	model Model,
-	config Config,
-	toolSets map[string]ToolSet,
-) (*Engine, error) {
-	if model == nil {
-		return nil, errors.New("model is required")
-	}
-	if config.Model == "" {
-		return nil, errors.New("model name is required")
-	}
-	if config.MaxTokens <= 0 {
-		return nil, errors.New("max tokens must be positive")
-	}
-	if config.MaxRounds <= 0 {
-		return nil, errors.New("max rounds must be positive")
-	}
-
-	sets := make(map[string]ToolSet, len(toolSets))
-	for setName, sourceSet := range toolSets {
-		targetSet := make(ToolSet, len(sourceSet))
-		for toolName, tool := range sourceSet {
-			targetSet[toolName] = tool
-		}
-		sets[setName] = targetSet
-	}
-
-	return &Engine{
-		model:    model,
-		config:   config,
-		toolSets: sets,
-	}, nil
-}
-```
-
-构造时复制工具 map，避免调用方运行过程中修改注册表，造成并发问题。
-
-### 7. 实现工具定义转换
-
-继续在 `engine.go` 中添加：
-
-```go
-func buildToolDefinitions(toolSet ToolSet) []anthropic.ToolUnionParam {
-	names := make([]string, 0, len(toolSet))
-	for name := range toolSet {
-		names = append(names, name)
-	}
-	sort.Strings(names)
-
-	result := make([]anthropic.ToolUnionParam, 0, len(names))
-	for _, name := range names {
-		result = append(result, toolSet[name].Definition)
-	}
-
-	return result
-}
-```
-
-排序不是业务要求，但会让测试请求稳定，方便排查问题。
-
-### 8. 实现核心循环
-
-在 `engine.go` 中实现 `RunTurn`：
-
-```go
-func (e *Engine) RunTurn(
-	ctx context.Context,
-	req TurnRequest,
-) (TurnResult, error) {
-	if strings.TrimSpace(req.SystemPrompt) == "" {
-		return TurnResult{}, errors.New("system prompt is required")
-	}
-
-	toolSet, ok := e.toolSets[req.ToolSet]
-	if !ok {
-		return TurnResult{}, fmt.Errorf(
-			"unknown tool set: %s",
-			req.ToolSet,
-		)
-	}
-
-	runCtx := ctx
-	cancel := func() {}
-
-	if e.config.TurnTimeout > 0 {
-		runCtx, cancel = context.WithTimeout(
-			ctx,
-			e.config.TurnTimeout,
-		)
-	}
-	defer cancel()
-
-	// 创建新的切片，不能直接向 req.Messages append。
-	messages := make(
-		[]anthropic.MessageParam,
-		0,
-		len(req.Messages)+1,
-	)
-	messages = append(messages, req.Messages...)
-
-	if req.Input != "" {
-		messages = append(
-			messages,
-			anthropic.NewUserMessage(
-				anthropic.NewTextBlock(req.Input),
-			),
-		)
-	}
-
-	tools := buildToolDefinitions(toolSet)
-
-	for round := 1; round <= e.config.MaxRounds; round++ {
-		if err := runCtx.Err(); err != nil {
-			return TurnResult{
-				Messages: messages,
-			}, err
-		}
-
-		response, err := e.model.Generate(
-			runCtx,
-			anthropic.MessageNewParams{
-				Model:     e.config.Model,
-				MaxTokens: e.config.MaxTokens,
-				System: []anthropic.TextBlockParam{
-					{Text: req.SystemPrompt},
-				},
-				Messages: messages,
-				Tools:    tools,
-			},
-		)
-		if err != nil {
-			return TurnResult{
-				Messages: messages,
-			}, fmt.Errorf("generate model response: %w", err)
-		}
-		if response == nil {
-			return TurnResult{
-				Messages: messages,
-			}, errors.New("model returned nil response")
-		}
-
-		messages = append(messages, response.ToParam())
-
-		if response.StopReason != anthropic.StopReasonToolUse {
-			return TurnResult{
-				Text:       collectText(response),
-				Messages:   messages,
-				StopReason: string(response.StopReason),
-			}, nil
-		}
-
-		results, err := e.executeTools(
-			runCtx,
-			req.Scope,
-			toolSet,
-			response,
-		)
-		if err != nil {
-			return TurnResult{
-				Messages: messages,
-			}, err
-		}
-
-		messages = append(
-			messages,
-			anthropic.NewUserMessage(results...),
-		)
-	}
-
-	return TurnResult{
-		Messages: messages,
-	}, fmt.Errorf(
-		"maximum agent rounds exceeded: %d",
-		e.config.MaxRounds,
-	)
-}
-```
-
-这里传入的 `req.Messages` 不会被追加或覆盖。Engine 只操作自己创建的切片。
-
-### 9. 实现工具执行
-
-继续在 `engine.go` 添加：
-
-```go
-func (e *Engine) executeTools(
-	ctx context.Context,
-	scope Scope,
-	toolSet ToolSet,
-	response *anthropic.Message,
-) ([]anthropic.ContentBlockParamUnion, error) {
-	results := make([]anthropic.ContentBlockParamUnion, 0)
-	foundToolUse := false
-
-	for _, content := range response.Content {
-		block, ok := content.AsAny().(anthropic.ToolUseBlock)
-		if !ok {
-			continue
-		}
-
-		foundToolUse = true
-
-		var input map[string]any
-		if err := json.Unmarshal(block.Input, &input); err != nil {
-			results = append(
-				results,
-				anthropic.NewToolResultBlock(
-					block.ID,
-					fmt.Sprintf("invalid tool input: %v", err),
-					true,
-				),
-			)
-			continue
-		}
-
-		registeredTool, ok := toolSet[block.Name]
-		if !ok {
-			results = append(
-				results,
-				anthropic.NewToolResultBlock(
-					block.ID,
-					fmt.Sprintf(
-						"tool is not authorized: %s",
-						block.Name,
-					),
-					true,
-				),
-			)
-			continue
-		}
-
-		if registeredTool.Execute == nil {
-			results = append(
-				results,
-				anthropic.NewToolResultBlock(
-					block.ID,
-					"tool handler is not configured",
-					true,
-				),
-			)
-			continue
-		}
-
-		output, err := registeredTool.Execute(
-			ctx,
-			scope,
-			input,
-		)
-		if err != nil {
-			results = append(
-				results,
-				anthropic.NewToolResultBlock(
-					block.ID,
-					err.Error(),
-					true,
-				),
-			)
-			continue
-		}
-
-		results = append(
-			results,
-			anthropic.NewToolResultBlock(
-				block.ID,
-				output,
-				false,
-			),
-		)
-	}
-
-	if !foundToolUse {
-		return nil, errors.New(
-			"model stopped for tool use without a tool_use block",
-		)
-	}
-
-	return results, nil
-}
-```
-
-注意错误分两类：
-
-- 模型请求了无权使用的工具：返回 `tool_result`，让模型自行修正。
-- 模型协议不合法，例如 `stop_reason=tool_use` 却没有工具块：终止本轮并返回 Go error。
-
-### 10. 收集最终文本
-
-继续添加：
-
-```go
-func collectText(response *anthropic.Message) string {
-	parts := make([]string, 0)
-
-	for _, content := range response.Content {
-		block, ok := content.AsAny().(anthropic.TextBlock)
-		if !ok {
-			continue
-		}
-
-		text := strings.TrimSpace(block.Text)
-		if text != "" {
-			parts = append(parts, text)
-		}
-	}
-
-	return strings.Join(parts, "\n")
-}
-```
-
-当前只收集最终一次模型响应中的文本。工具调用前的中间说明不作为最终回答返回。
-
-### 11. 创建假模型
-
-在 `engine_test.go` 中定义：
-
-```go
-type fakeModel struct {
-	responses []*anthropic.Message
-	requests  []anthropic.MessageNewParams
-	next      int
-}
-
-func (f *fakeModel) Generate(
-	ctx context.Context,
-	params anthropic.MessageNewParams,
-) (*anthropic.Message, error) {
-	if err := ctx.Err(); err != nil {
-		return nil, err
-	}
-
-	f.requests = append(f.requests, params)
-
-	if f.next >= len(f.responses) {
-		return nil, errors.New("no fake response configured")
-	}
-
-	response := f.responses[f.next]
-	f.next++
-
-	return response, nil
-}
-```
-
-为了方便构造 SDK 响应，可以用 JSON：
-
-```go
-func mustMessage(t *testing.T, source string) *anthropic.Message {
-	t.Helper()
-
-	var result anthropic.Message
-	if err := json.Unmarshal([]byte(source), &result); err != nil {
-		t.Fatal(err)
-	}
-
-	return &result
-}
-```
-
-### 12. 测试直接回复
-
-```go
-func TestRunTurnReturnsText(t *testing.T) {
-	model := &fakeModel{
-		responses: []*anthropic.Message{
-			mustMessage(t, `{
-				"id": "msg_1",
-				"type": "message",
-				"role": "assistant",
-				"model": "test-model",
-				"stop_reason": "end_turn",
-				"content": [
-					{"type": "text", "text": "欢迎来到铁匠铺。"}
-				],
-				"usage": {
-					"input_tokens": 1,
-					"output_tokens": 1
-				}
-			}`),
-		},
-	}
-
-	value, err := New(
-		model,
-		Config{
-			Model:     "test-model",
-			MaxTokens: 100,
-			MaxRounds: 3,
-		},
-		map[string]ToolSet{
-			"npc": {},
-		},
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	original := []anthropic.MessageParam{}
-
-	result, err := value.RunTurn(
-		context.Background(),
-		TurnRequest{
-			Scope: Scope{
-				WorldID:   "world-1",
-				AgentKind: "npc",
-				AgentID:   "blacksmith",
-				PlayerID:  "player-1",
-				SessionID: "session-1",
-				TurnID:    "turn-1",
-			},
-			SystemPrompt: "你是城镇铁匠。",
-			Messages:     original,
-			Input:        "你好",
-			ToolSet:      "npc",
-		},
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if result.Text != "欢迎来到铁匠铺。" {
-		t.Fatalf("unexpected text: %q", result.Text)
-	}
-	if len(result.Messages) != 2 {
-		t.Fatalf(
-			"expected 2 messages, got %d",
-			len(result.Messages),
-		)
-	}
-	if len(original) != 0 {
-		t.Fatal("input messages were modified")
-	}
-	if len(model.requests) != 1 {
-		t.Fatalf(
-			"expected 1 model request, got %d",
-			len(model.requests),
-		)
-	}
-}
-```
-
-### 13. 测试工具调用后回复
-
-假模型准备两次响应：
-
-```go
-toolCall := mustMessage(t, `{
-	"id": "msg_1",
-	"type": "message",
-	"role": "assistant",
-	"model": "test-model",
-	"stop_reason": "tool_use",
-	"content": [
-		{
-			"type": "tool_use",
-			"id": "tool_1",
-			"name": "get_agent_name",
-			"input": {}
-		}
-	],
-	"usage": {
-		"input_tokens": 1,
-		"output_tokens": 1
-	}
-}`)
-
-finalReply := mustMessage(t, `{
-	"id": "msg_2",
-	"type": "message",
-	"role": "assistant",
-	"model": "test-model",
-	"stop_reason": "end_turn",
-	"content": [
-		{"type": "text", "text": "我是铁匠布兰。"}
-	],
-	"usage": {
-		"input_tokens": 1,
-		"output_tokens": 1
-	}
-}`)
-```
-
-注册测试工具，并记录它收到的 Scope：
-
-```go
-var receivedScope Scope
-callCount := 0
-
-getAgentName := Tool{
-	Definition: anthropic.ToolUnionParamOfTool(
-		anthropic.ToolInputSchemaParam{
-			Type:       "object",
-			Properties: map[string]any{},
-			Required:   []string{},
-		},
-		"get_agent_name",
-	),
-	Execute: func(
-		ctx context.Context,
-		scope Scope,
-		input map[string]any,
-	) (string, error) {
-		callCount++
-		receivedScope = scope
-		return "铁匠布兰", nil
-	},
-}
-```
-
-运行后断言：
-
-```go
-if result.Text != "我是铁匠布兰。" {
-	t.Fatalf("unexpected text: %q", result.Text)
-}
-if callCount != 1 {
-	t.Fatalf("expected tool call once, got %d", callCount)
-}
-if receivedScope.AgentID != "blacksmith" {
-	t.Fatalf(
-		"unexpected agent ID: %s",
-		receivedScope.AgentID,
-	)
-}
-if receivedScope.PlayerID != "player-1" {
-	t.Fatalf(
-		"unexpected player ID: %s",
-		receivedScope.PlayerID,
-	)
-}
-if len(model.requests) != 2 {
-	t.Fatalf(
-		"expected 2 model requests, got %d",
-		len(model.requests),
-	)
-}
-```
-
-还可以将第二次请求序列化，检查里面确实包含工具结果：
-
-```go
-encoded, err := json.Marshal(model.requests[1].Messages)
-if err != nil {
-	t.Fatal(err)
-}
-
-payload := string(encoded)
-if !strings.Contains(payload, `"tool_result"`) {
-	t.Fatal("second request does not contain tool result")
-}
-if !strings.Contains(payload, "铁匠布兰") {
-	t.Fatal("second request does not contain tool output")
-}
-```
-
-### 14. 运行验收
-
-先只测试新包：
-
-```powershell
-go test ./internal/agent/engine -v
-go test -race ./internal/agent/engine
-```
-
-再检查整个项目：
-
-```powershell
-go test ./...
-go vet ./...
-```
-
-这一阶段不要修改 [repl.go](D:/GoProjects/cyber_towm/internal/agent/repl.go) 或删除原来的 `AgentLoop`。第一个小目标完成的标志是：
-
-```text
-直接文本测试通过
-工具调用闭环测试通过
-工具收到正确 Scope
-原始消息没有被修改
-测试不需要 API Key、Qdrant、MCP、Cron 或 readline
-```
-
-随后第二个小目标才是把 CLI 的一次 `handleQuery` 改为调用这个 Engine。
+**模型负责可能性，规则负责真实性。**
