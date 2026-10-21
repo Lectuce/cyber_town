@@ -86,7 +86,7 @@ func UpadtePlayerPosition(ctx context.Context,
 	}
 
 	if affected == 0 {
-		return fmt.Errorf("player %q does not exist or revision has changed", playerID)
+		return ErrPlayerRevisionConflict
 	}
 
 	return nil

@@ -38,6 +38,69 @@ func PlayerHandler(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
-func PlayerPosition() {
+func PlayerPosition(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var body struct {
+			Position struct {
+				X *float64 `json:"x" binding:"required"`
+				Y *float64 `json:"y" binding:"required"`
+			} `json:"position"`
 
+			Floor *int `json:"floor" binding:"required,min=0,max=3"`
+
+			ExpectedRevision int64 `json:"expected_revision" binding:"required,min=1"`
+		}
+
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 4096)
+
+		err := c.ShouldBind(&body)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "invalid player position request",
+			})
+			return
+		}
+
+		player, err := game.SavePlayerPosition(
+			c.Request.Context(),
+			db,
+			"town-1",
+			"player-1",
+			game.Position{
+				X: *body.Position.X,
+				Y: *body.Position.Y,
+			},
+			*body.Floor,
+			body.ExpectedRevision,
+		)
+
+		if err != nil {
+			switch {
+			case errors.Is(err, game.ErrPlayerInactive):
+				c.JSON(http.StatusForbidden, gin.H{
+					"error": "player is not active",
+				})
+
+			case errors.Is(err, game.ErrPlayerRevisionConflict):
+				c.JSON(http.StatusConflict, gin.H{
+					"error": "player revision conflict; reload player",
+				})
+
+			case errors.Is(err, sql.ErrNoRows):
+				c.JSON(http.StatusNotFound, gin.H{
+					"error": "player not found",
+				})
+
+			default:
+				log.Printf("save player position: %v", err)
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"error": "failed to save player position",
+				})
+			}
+			return
+		}
+
+		c.JSON(http.StatusOK, player)
+
+	}
 }

@@ -3,9 +3,12 @@ package game
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"math"
 )
+
+var ErrPlayerRevisionConflict = errors.New("player revision conflict")
 
 func SavePlayerPosition(ctx context.Context, db *sql.DB, worldID string, playerID string, target Position, floor int, expectedRevision int64) (Player, error) {
 
@@ -35,9 +38,12 @@ func SavePlayerPosition(ctx context.Context, db *sql.DB, worldID string, playerI
 	}
 
 	if player.Revision != expectedRevision {
-		return Player{}, fmt.Errorf("player revision conflict: expected %d, current %d",
+		return Player{}, fmt.Errorf(
+			"%w: expected %d, current %d",
+			ErrPlayerRevisionConflict,
 			expectedRevision,
-			player.Revision)
+			player.Revision,
+		)
 	}
 
 	// 坐标和楼层都没有变化，就不用更新存档。
