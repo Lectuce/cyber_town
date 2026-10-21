@@ -76,6 +76,20 @@ CREATE TABLE IF NOT EXISTS player_quests (
 		REFERENCES players(world_id, id)
 );
 
+CREATE TABLE IF NOT EXISTS player_evidence (
+    world_id TEXT NOT NULL,
+    player_id TEXT NOT NULL,
+    evidence_id TEXT NOT NULL,
+    source_id TEXT NOT NULL,
+    discovered_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (world_id, player_id, evidence_id),
+
+    FOREIGN KEY (world_id, player_id)
+        REFERENCES players(world_id, id)
+);
+
+
 `
 
 func OpenDatabase(ctx context.Context, path string) (*sql.DB, error) {
