@@ -53,7 +53,7 @@ func PlayerPosition(db *sql.DB) gin.HandlerFunc {
 
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 4096)
 
-		err := c.ShouldBind(&body)
+		err := c.ShouldBindJSON(&body)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "invalid player position request",

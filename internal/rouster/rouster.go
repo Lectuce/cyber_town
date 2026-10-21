@@ -20,6 +20,6 @@ func SetUpRousters(r *gin.Engine, db *sql.DB, dialogueService *npc.DialogueServi
 	r.GET("/api/quests/:questID", handler.QuestHandler(db))
 	r.POST("/api/quests/:questID/accept", handler.AcceptQuestHandler(db))
 
-	r.PUT("/api/player/position")
+	r.PUT("/api/player/position", handler.PlayerPosition(db))
 
 }
