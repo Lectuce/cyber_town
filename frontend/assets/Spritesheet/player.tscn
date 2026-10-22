@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://l223k0nuf2s5"]
+
+[ext_resource type="Script" uid="uid://lc0hhllikc4g" path="res://player.gd" id="1_onrkg"]
+[ext_resource type="Texture2D" uid="uid://fggnkw5ifqw6" path="res://assets/Spritesheet/roguelikeChar_transparent.png" id="2_i3pqv"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_87v1x"]
+size = Vector2(10, 2)
+
+[node name="Player" type="CharacterBody2D" unique_id=769310049]
+script = ExtResource("1_onrkg")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1026078269]
+texture = ExtResource("2_i3pqv")
+region_enabled = true
+region_rect = Rect2(0, 102, 16, 17)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1629027072]
+position = Vector2(0, 7)
+shape = SubResource("RectangleShape2D_87v1x")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=678481002]

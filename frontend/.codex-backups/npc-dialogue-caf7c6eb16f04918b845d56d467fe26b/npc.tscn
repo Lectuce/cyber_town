@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://cm45b7hsf4pl8"]
+
+[ext_resource type="Texture2D" uid="uid://fggnkw5ifqw6" path="res://assets/Spritesheet/roguelikeChar_transparent.png" id="1_ideak"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_7jktm"]
+size = Vector2(15, 3)
+
+[node name="NPC" type="StaticBody2D" unique_id=2131022462]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=476078173]
+texture = ExtResource("1_ideak")
+region_enabled = true
+region_rect = Rect2(0, 186.20093, 16, 17.075302)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1392466738]
+position = Vector2(-0.5, 7.5)
+shape = SubResource("RectangleShape2D_7jktm")

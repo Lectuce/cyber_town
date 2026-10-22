@@ -18,7 +18,8 @@ internal/agent/backend_notes.md
 bin/
 internal/agent/.mailboxes
 /qdrant_storage
-
+/frontend/docs/
+/frontend/tests/
 .idea/
 .vscode/
 .DS_Store
