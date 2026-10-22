@@ -89,6 +89,34 @@ CREATE TABLE IF NOT EXISTS player_evidence (
         REFERENCES players(world_id, id)
 );
 
+CREATE TABLE IF NOT EXISTS player_inventory (
+    world_id TEXT NOT NULL,
+    player_id TEXT NOT NULL,
+    item_id TEXT NOT NULL,
+    quantity INTEGER NOT NULL
+        CHECK (typeof(quantity) = 'integer' AND quantity >= 0),
+
+    PRIMARY KEY (world_id, player_id, item_id),
+
+    FOREIGN KEY (world_id, player_id)
+        REFERENCES players(world_id, id)
+);
+
+CREATE TABLE IF NOT EXISTS player_item_claims (
+    world_id TEXT NOT NULL,
+    player_id TEXT NOT NULL,
+    source_id TEXT NOT NULL,
+    item_id TEXT NOT NULL,
+    quantity INTEGER NOT NULL
+        CHECK (typeof(quantity) = 'integer' AND quantity > 0),
+    claimed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (world_id, player_id, source_id, item_id),
+
+    FOREIGN KEY (world_id, player_id)
+        REFERENCES players(world_id, id)
+);
+
 
 `
 
