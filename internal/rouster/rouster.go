@@ -25,5 +25,6 @@ func SetUpRousters(r *gin.Engine, db *sql.DB, dialogueService *npc.DialogueServi
 	r.GET("/api/player/inventory", handler.InventoryHandler(db))
 
 	r.POST("/api/investigation-points/abandoned_cart/claim", handler.ClaimInventory(db))
+	r.POST("/api/quests/:questID/complete", handler.CompleteQuestHandler(db))
 
 }

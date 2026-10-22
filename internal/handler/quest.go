@@ -109,3 +109,72 @@ func AcceptQuestHandler(db *sql.DB) gin.HandlerFunc {
 		c.JSON(http.StatusOK, quest)
 	}
 }
+
+func CompleteQuestHandler(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		questID := c.Param("questID")
+
+		// 将不存在的任务与结算失败区分开。
+		if _, err := game.GetQuestDefinition(questID); err != nil {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "任务不存在。",
+			})
+			return
+		}
+
+		result, err := game.CompleteQuest(
+			c.Request.Context(),
+			db,
+			"town-1",
+			"player-1",
+			questID,
+		)
+		if err != nil {
+			switch {
+			case errors.Is(err, game.ErrPlayerInactive):
+				c.JSON(http.StatusForbidden, gin.H{
+					"error": "玩家当前无法提交任务。",
+				})
+
+			case errors.Is(err, game.ErrQuestNotActive):
+				c.JSON(http.StatusConflict, gin.H{
+					"error": "任务尚未接受或不处于进行中。",
+				})
+
+			case errors.Is(err, game.ErrOutsideQuestRange):
+				c.JSON(http.StatusForbidden, gin.H{
+					"error": "请靠近任务发布者后再提交。",
+				})
+
+			case errors.Is(err, game.ErrEvidenceRequired):
+				c.JSON(http.StatusConflict, gin.H{
+					"error": "缺少调查证据，请先调查货车现场。",
+				})
+
+			case errors.Is(err, game.ErrQuestItemsRequired):
+				c.JSON(http.StatusConflict, gin.H{
+					"error": "缺少货物凭证，请先从货车现场领取。",
+				})
+
+			case errors.Is(err, game.ErrQuestCompletionConflict):
+				c.JSON(http.StatusConflict, gin.H{
+					"error": "任务状态已变化，请重新查询后再提交。",
+				})
+
+			case errors.Is(err, sql.ErrNoRows):
+				c.JSON(http.StatusNotFound, gin.H{
+					"error": "玩家或任务发布者不存在。",
+				})
+
+			default:
+				log.Printf("complete quest: %v", err)
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"error": "任务结算失败，请稍后重试。",
+				})
+			}
+			return
+		}
+
+		c.JSON(http.StatusOK, result)
+	}
+}
