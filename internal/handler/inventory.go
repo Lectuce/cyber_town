@@ -43,7 +43,7 @@ func InventoryHandler(db *sql.DB) gin.HandlerFunc {
 func ClaimInventory(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		result, err := game.ClaimShipmentReceipt(c, db, "town-1", "player-1")
+		result, err := game.ClaimShipmentReceipt(c.Request.Context(), db, "town-1", "player-1")
 		if err != nil {
 			switch {
 			case errors.Is(err, game.ErrPlayerInactive):
