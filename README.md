@@ -1,6 +1,6 @@
 # Ironvale Chronicles
 
-> 铁谷纪事 · Agent-Driven Narrative RPG
+> Agent-Driven Narrative RPG
 
 一款正在开发中的 AI 原生单人叙事 RPG。玩家来到一座依赖铁矿贸易的中世纪小镇，通过自由语言与商人、铁匠、守卫和酒馆老板交涉，调查一辆离奇失踪的铁矿货车。
 
