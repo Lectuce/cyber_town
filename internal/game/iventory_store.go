@@ -31,7 +31,7 @@ func GetInventory(
 	}
 	defer tx.Rollback()
 
-	rows, err := tx.QueryContext(ctx, `sql
+	rows, err := tx.QueryContext(ctx, `
 		SELECT item_id, quantity
 		FROM player_inventory
 		WHERE world_id = ? AND player_id = ? AND quantity > 0
