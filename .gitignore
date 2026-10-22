@@ -11,7 +11,7 @@ internal/agent/.cron
 .env.*
 !.env.example
 internal/agent/backend_notes.md
-
+/AGENTS.md
 *.exe
 *.test
 *.out
