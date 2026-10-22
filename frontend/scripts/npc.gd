@@ -16,6 +16,9 @@ extends StaticBody2D
 func _ready() -> void:
 	add_to_group("talkable_npcs")
 
+
+
+
 func reply_to(message: String) -> String:
 	var query := message.to_lower()
 	if "你是谁" in query or "名字" in query:
