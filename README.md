@@ -1,4 +1,4 @@
-# Ironvale Chronicles
+# Agent-Driven Narrative RPG
 
 > Agent-Driven Narrative RPG
 
