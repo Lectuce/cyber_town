@@ -24,6 +24,19 @@ var NPCTools = []anthropic.ToolParam{
 			Required:   []string{},
 		},
 	},
+	{
+		Name: "get_my_quest_status",
+		Description: anthropic.String(
+			"查询当前角色发布的委托进度，" +
+				"包括任务状态、证据是否满足、凭证数量和奖励规则。" +
+				"目前仅委托发布者商人可使用。此工具只查询，不执行结算。",
+		),
+		InputSchema: anthropic.ToolInputSchemaParam{
+			Type:       "object",
+			Properties: map[string]interface{}{},
+			Required:   []string{},
+		},
+	},
 }
 
 var NPCToolsDefinitions = map[string][]anthropic.ToolUnionParam{
