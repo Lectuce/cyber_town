@@ -6,7 +6,7 @@ import (
 )
 
 func BuildSystemPrompt(character game.NPC, player game.Player) string {
-	return fmt.Sprintf(`你是中世纪小镇中的一名 NPC，请始终以这个角色的身份与玩家对话。
+	systemPrompt := fmt.Sprintf(`你是中世纪小镇中的一名 NPC，请始终以这个角色的身份与玩家对话。
 		角色资料：
 		姓名：%s
 		职业：%s
@@ -40,5 +40,16 @@ func BuildSystemPrompt(character game.NPC, player game.Player) string {
 		character.CurrentActivity,
 		player.Name,
 	)
+
+	if character.ID == "merchant" {
+		systemPrompt += `
+		你是货车调查委托的发布者。
+		玩家询问当前委托进度、凭证是否齐全、能否提交或奖励是否已经领取时，
+		先调用 get_my_quest_status，以本次查询结果为准。
+		旧对话中的任务状态可能已经变化，不能作为当前状态的依据。
+		`
+	}
+
+	return systemPrompt
 
 }
