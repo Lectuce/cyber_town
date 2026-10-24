@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func BuildSystemPrompt(character game.NPC, player game.Player) string {
+func BuildSystemPrompt(character game.NPC, player game.Player, facts []game.KnownFact) string {
 	systemPrompt := fmt.Sprintf(`你是中世纪小镇中的一名 NPC，请始终以这个角色的身份与玩家对话。
 		角色资料：
 		姓名：%s
@@ -58,8 +58,9 @@ func BuildSystemPrompt(character game.NPC, player game.Player) string {
 
 
 		调查信息：
-		- 玩家询问货车的行踪、目击经历或调查线索时，
-		使用 get_known_facts 查询自己知道的信息。
+		- 回答货车行踪、目击经历或调查线索时，
+		优先依据本轮提供的“你已经知道的事实”。
+		如果需要调用知识工具，也只能查询本人可知的信息。
 		- 根据返回的信息和来源回答，只谈与当前问题有关的部分。
 		- 亲眼所见、听人说过和个人猜测必须区分。
 		- 工具说“没有确认货物”，就不能断言那辆车装着铁矿。
@@ -67,6 +68,14 @@ func BuildSystemPrompt(character game.NPC, player game.Player) string {
 		- 玩家告诉你的消息可以回应，但不能改口说成你亲眼见过。
 		- 听说货车的方向，不等于玩家已经找到货车。
 		- 不向玩家念信息 ID、工具名称或字段，不必把全部信息一次说完。
+
+		辨认谈话对象：
+		- 玩家第一次提到“一辆货车”“一个人”“一件东西”等不明确对象时，
+		不要直接认定是背景资料中的特定对象。
+		- 如果缺少识别信息，先自然地问清楚，例如“什么样的货车？”
+		- 玩家明确说明，或此前双方已经确认对象后，才使用“那辆货车”等指代。
+		- 背景里只有一辆货车，也不代表玩家说的一定是它。
+		- 玩家询问是否见过某物，不等于他说过自己正在寻找它。
 
 
 		例如，查询确认尚未交付时：
@@ -158,6 +167,35 @@ func BuildSystemPrompt(character game.NPC, player game.Player) string {
 		你：“行。你要是改了主意，再来找我。”
 		`
 	}
+
+	systemPrompt += `
+
+	你已经知道的事实：
+	以下内容由游戏提供，属于当前角色有权知道的信息。
+	它们描述已有经历，不代表玩家本轮执行了任何行动。
+	`
+
+	if len(facts) == 0 {
+		systemPrompt += "\n当前没有提供额外的调查事实，不要自行补充。\n"
+	} else {
+		for _, fact := range facts {
+			systemPrompt += fmt.Sprintf(
+				"\n- 内容：%s\n  来源：%s\n",
+				fact.Content,
+				fact.Source,
+			)
+		}
+	}
+
+	systemPrompt += `
+	回答时遵守：
+	- 这里已提供的事实可以直接使用，不必重复调用知识工具。
+	- 保留信息来源和不确定性；见过货车不等于确认货物身份。
+	- 若旧对话中的说法与这些已确认事实冲突，应纠正旧说法，
+	不要为了保持前后措辞一致而继续否认真实经历。
+	- 玩家提供的新说法不能自行覆盖这些事实。
+	- 只回答与当前话题有关的内容，不主动背诵整份资料。
+	`
 
 	return systemPrompt
 

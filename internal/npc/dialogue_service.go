@@ -228,7 +228,14 @@ func (s *DialogueService) Chat(
 		history = append(history, turns[i]...)
 	}
 
-	result, err := s.agent.Reply(ctx, character, player, history, req, onText)
+	facts, err := game.GetKnownFacts(ctx, s.db, character.WorldID, character.ID)
+	if err != nil {
+		return ChatResponse{}, fmt.Errorf(
+			"load NPC knowledge: %v", err,
+		)
+	}
+
+	result, err := s.agent.Reply(ctx, character, player, facts, history, req, onText)
 	if err != nil {
 		return ChatResponse{}, fmt.Errorf("NPC reply: %w", err)
 	}

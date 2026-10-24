@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 )
 
 func BuildToolHandlers(db *sql.DB) map[string]engine.ToolHandler {
@@ -88,6 +89,13 @@ func getKnownFacts(
 	if err != nil {
 		return "", fmt.Errorf("encode quest status: %w", err)
 	}
+
+	log.Printf(
+		"NPC knowledge turn=%s npc=%s result=%s",
+		scope.TurnID,
+		scope.AgentID,
+		string(raw),
+	)
 
 	return string(raw), nil
 
