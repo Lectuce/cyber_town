@@ -53,10 +53,10 @@ func GetKnownFacts(
 		return []KnownFact{
 			{
 				ID: "guards_cart_direction",
-				Content: "据埃德蒙值守时的目击，一辆货车曾往城门西北方向驶去。" +
-					"守卫没有检查车上的货物，" +
+				Content: "你值守时亲眼看见一辆货车往城门西北方向驶去。" +
+					"你没有检查车上的货物，" +
 					"不能确认那就是马丁等待的铁矿货车。",
-				Source: "埃德蒙目击，并将这条消息告知汉斯和托马斯。",
+				Source: "本人值守时目击。",
 			},
 		}, nil
 
