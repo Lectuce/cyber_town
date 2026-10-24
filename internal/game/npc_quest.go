@@ -7,16 +7,13 @@ import (
 )
 
 type NPCQuestStatus struct {
-	QuestID                 string `json:"quest_id"`
-	Title                   string `json:"title"`
-	Status                  string `json:"status"`
-	HasRequiredEvidence     bool   `json:"has_required_evidence"`
-	RequiredItemID          string `json:"required_item_id"`
-	RequiredItemCount       int64  `json:"required_item_count"`
-	OwnedItemCount          int64  `json:"owned_item_count"`
-	SubmissionConditionsMet bool   `json:"submission_conditions_met"`
-	RewardItemID            string `json:"reward_item_id"`
-	RewardItemCount         int64  `json:"reward_item_count"`
+	QuestID           string `json:"quest_id"`
+	Title             string `json:"title"`
+	Status            string `json:"status"`
+	RequiredItemID    string `json:"required_item_id"`
+	RequiredItemCount int64  `json:"required_item_count"`
+	RewardItemID      string `json:"reward_item_id"`
+	RewardItemCount   int64  `json:"reward_item_count"`
 }
 
 func GetNPCQuestStatus(
@@ -26,23 +23,21 @@ func GetNPCQuestStatus(
 	playerID string,
 	npcID string,
 ) (NPCQuestStatus, error) {
-
 	if worldID == "" || playerID == "" || npcID == "" {
 		return NPCQuestStatus{}, fmt.Errorf(
 			"world id, player id and NPC id are required",
 		)
 	}
 
-	// 货车调查任务。
 	definition, err := GetQuestDefinition("missing_iron_cart")
 	if err != nil {
 		return NPCQuestStatus{}, err
 	}
 
-	// 只允许任务发布者查询这份提交进度。
+	// 只允许任务发布者查询自己的委托记录。
 	if npcID != definition.GiverNPCID {
 		return NPCQuestStatus{}, fmt.Errorf(
-			"当前角色无权查询这项委托的提交进度",
+			"当前角色无权查询这项委托的记录",
 		)
 	}
 
@@ -59,27 +54,10 @@ func GetNPCQuestStatus(
 		RewardItemCount:   definition.RewardItemCount,
 	}
 
-	var playerStatus string
-
-	// 一条查询读取相关状态，避免分别查询时读到不同时间的结果。
+	// 只查询委托是否接取、是否完成。
+	// 不读取玩家背包和调查证据。
 	err = db.QueryRowContext(ctx, `
-		SELECT
-			p.status,
-			COALESCE(q.status, 'not_started'),
-			EXISTS (
-				SELECT 1
-				FROM player_evidence e
-				WHERE e.world_id = p.world_id
-					AND e.player_id = p.id
-					AND e.evidence_id = ?
-			),
-			COALESCE((
-				SELECT i.quantity
-				FROM player_inventory i
-				WHERE i.world_id = p.world_id
-					AND i.player_id = p.id
-					AND i.item_id = ?
-			), 0)
+		SELECT COALESCE(q.status, 'not_started')
 		FROM players p
 		LEFT JOIN player_quests q
 			ON q.world_id = p.world_id
@@ -87,29 +65,15 @@ func GetNPCQuestStatus(
 			AND q.quest_id = ?
 		WHERE p.world_id = ? AND p.id = ?
 	`,
-		definition.RequiredEvidenceID,
-		definition.RequiredItemID,
 		definition.ID,
 		worldID,
 		playerID,
-	).Scan(
-		&playerStatus,
-		&result.Status,
-		&result.HasRequiredEvidence,
-		&result.OwnedItemCount,
-	)
+	).Scan(&result.Status)
 	if err != nil {
 		return NPCQuestStatus{}, fmt.Errorf(
 			"query NPC quest status: %w", err,
 		)
 	}
 
-	result.SubmissionConditionsMet =
-		playerStatus == "active" &&
-			result.Status == QuestStatusActive &&
-			result.HasRequiredEvidence &&
-			result.OwnedItemCount >= result.RequiredItemCount
-
 	return result, nil
-
 }
